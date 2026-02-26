@@ -1,0 +1,57 @@
+{
+  // ----- 编译器选项 -----
+  "compilerOptions": {
+    // 目标 ECMAScript 版本：es5 保证最大兼容性（支持所有浏览器）
+    "target": "es5",
+    // 编译时包含的库文件：dom 提供浏览器 API，dom.iterable 支持可迭代对象，esnext 包含最新特性
+    "lib": ["dom", "dom.iterable", "esnext"],
+    // 允许编译 JavaScript 文件（方便混合使用 JS 和 TS）
+    "allowJs": true,
+    // 跳过所有声明文件（*.d.ts）的类型检查，加快编译速度
+    "skipLibCheck": true,
+    // 启用所有严格类型检查选项（建议保持 true 以提高代码健壮性）
+    "strict": true,
+    // 强制文件名大小写一致（避免跨平台开发的问题）
+    "forceConsistentCasingInFileNames": true,
+    // 不生成输出文件（Next.js 自己处理编译输出）
+    "noEmit": true,
+    // 允许使用 import 代替 import * as，更好地兼容 CommonJS 模块
+    "esModuleInterop": true,
+    // 模块系统：esnext 支持动态导入和顶级 await
+    "module": "esnext",
+    // 模块解析策略：node 风格（查找 node_modules 和文件扩展名）
+    "moduleResolution": "node",
+    // 允许导入 JSON 文件
+    "resolveJsonModule": true,
+    // 确保每个文件可以被独立编译（与 Babel 等转译工具兼容）
+    "isolatedModules": true,
+    // JSX 代码保留原样，由 Next.js 处理（必须设为 preserve）
+    "jsx": "preserve",
+    // 启用增量编译，加快后续编译速度
+    "incremental": true,
+
+    // ----- 路径别名配置（可选）-----
+    // 基础路径，用于解析非相对模块名（通常设为项目根目录）
+    "baseUrl": ".",
+    // 路径映射：@/* 指向项目根目录下的任意路径
+    "paths": {
+      "@/*": ["./*"]
+      // 可以根据需要添加更多别名，例如：
+      // "@components/*": ["components/*"],
+      // "@lib/*": ["lib/*"]
+    }
+  },
+
+  // ----- 包含的文件/目录 -----
+  "include": [
+    "next-env.d.ts",          // Next.js 自动生成的环境类型声明
+    "**/*.ts",                // 所有 TypeScript 文件
+    "**/*.tsx",               // 所有 TypeScript React 文件
+    ".next/types/**/*.ts"      // Next.js 生成的类型文件（支持绝对路径导入等）
+  ],
+
+  // ----- 排除的文件/目录 -----
+  "exclude": [
+    "node_modules"            // 排除依赖目录
+  ]
+}

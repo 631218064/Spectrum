@@ -1,0 +1,57 @@
+spectrum/
+├── .env.example                     # 环境变量示例（已提供）
+├── .gitignore                       # Git 忽略文件（需要包含node_modules、.env 等）
+├── package.json                      # 项目依赖（已提供）
+├── next.config.js                    # Next.js 配置（已提供）
+├── tailwind.config.js                 # Tailwind CSS 配置（已提供）
+├── postcss.config.js                  # PostCSS 配置（已提供）
+├── tsconfig.json                      # TypeScript 配置（已提供）
+├── vercel.json                        # Vercel 部署配置（可选，已提供）
+├── README.md                          # 项目说明（可选）
+│
+├── public/                            # 静态资源（图片、字体等）
+│   └── (favicon.ico, images, etc.)
+│
+├── styles/
+│   └── globals.css                    # 全局样式（已提供框架，需要完整内容）
+│
+├── lib/                               # 工具库
+│   ├── supabase.ts                     # Supabase 客户端（待提供）
+│   ├── storage.ts                       # 文件上传辅助函数（待提供）
+│   ├── ai.ts                             # AI 线索生成（待提供，基于之前代码调整）
+│   ├── clueTemplates.ts                  # 线索模板库（待提供，基于之前代码）
+│   ├── matchingAlgorithm.ts               # 传统匹配算法（待提供，基于之前代码）
+│   └── translations.ts                    # 多语言翻译（待提供，基于之前代码）
+│
+├── pages/                              # 页面和 API 路由
+│   ├── _app.tsx                         # 全局组件（需集成 Supabase 会话，待提供）
+│   ├── index.tsx                         # 主页面（Landing/Onboarding/Dashboard 合一，待提供）
+│   ├── auth/                             # 认证相关页面
+│   │   ├── signin.tsx                      # 登录/注册页面（待提供）
+│   │   └── callback.ts                      # OAuth 回调（如果使用，待提供）
+│   ├── dashboard.tsx                      # 仪表盘页面（可选，可将 index.tsx 拆分）
+│   ├── onboarding.tsx                      # 注册页面（可选，可将 index.tsx 拆分）
+│   └── api/                               # API 路由
+│       ├── profile.ts                        # 保存用户资料（待提供）
+│       ├── matches/
+│       │   ├── index.ts                        # 获取匹配列表（待提供）
+│       │   ├── request.ts                       # 发送匹配请求（待提供）
+│       │   ├── respond.ts                        # 响应匹配请求（含 AI 线索生成，待提供）
+│       │   └── [id]/
+│       │       ├── message.ts                       # 发送每日消息（待提供）
+│       │       └── terminate.ts                       # 终止匹配（待提供）
+│       └── cron/
+│           ├── daily-reveal.ts                     # 每日 8:00 揭晓（待提供）
+│           └── expire-requests.ts                    # 每小时清理过期请求（待提供）
+│
+├── types/                              # 全局类型定义（可选）
+│   └── index.d.ts
+│
+├── hooks/                              # 自定义 React Hooks（可选）
+│   └── useSupabaseSession.ts             # 管理 Supabase 会话的 Hook
+│
+└── components/                         # 可复用组件（可选）
+    ├── Layout.tsx
+    ├── Button.tsx
+    ├── LanguageToggle.tsx
+    └── ...

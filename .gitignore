@@ -1,0 +1,95 @@
+# =============================================
+# Spectrum 交友平台 Git 忽略文件配置
+# 作用：指定哪些文件和目录不应被 Git 跟踪
+# =============================================
+
+# ---------- 依赖 ----------
+# Node.js 依赖目录
+node_modules/
+
+# ---------- 构建产物 ----------
+# Next.js 构建输出
+.next/
+out/
+build/
+dist/
+
+# ---------- 环境变量 ----------
+# 本地环境变量文件（包含敏感信息，切勿提交）
+.env
+.env.local
+.env.production
+.env.*.local
+
+# ---------- 日志 ----------
+# npm/yarn 日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------- 测试覆盖率 ----------
+coverage/
+.nyc_output/
+
+# ---------- IDE 配置 ----------
+# VS Code（可根据个人需要选择忽略）
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains IDEs（WebStorm, IntelliJ IDEA 等）
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*#
+.#*
+
+# ---------- 操作系统文件 ----------
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Linux
+*~
+
+# ---------- 其他 ----------
+# Vercel 部署缓存（如果使用 Vercel CLI）
+.vercel
+
+# 临时文件
+tmp/
+temp/
+
+# 数据库文件（如果本地使用了 SQLite）
+*.db
+*.sqlite
+*.sqlite3
+
+# 证书文件（如果有）
+*.pem
+*.key
+*.crt
+
+# 备份文件
+*.bak
+*.backup

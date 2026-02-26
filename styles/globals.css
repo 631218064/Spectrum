@@ -1,0 +1,81 @@
+/* styles/globals.css
+   ============================================
+   全局样式文件，用于导入 Tailwind 并定义自定义全局样式
+   所有页面共享的基础样式在此定义
+   ============================================ */
+
+/* ---------- Tailwind 基础导入 ---------- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- 自定义全局样式 ---------- */
+
+/* 自定义滚动条（可选，增强科幻感） */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(236, 72, 153, 0.3); /* 粉色半透明 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(236, 72, 153, 0.5);
+}
+
+/* 基础 body 样式（已在 Tailwind 中通过类设置，这里作为后备） */
+body {
+  background-color: #050505;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* 彩虹渐变文本辅助类（可复用） */
+.rainbow-text {
+  @apply bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-600 bg-clip-text text-transparent;
+}
+
+/* 玻璃态卡片效果（可复用） */
+.glass-card {
+  @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl;
+}
+
+/* 科幻风格网格背景（可添加到容器） */
+.grid-bg {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* 动画：脉冲光晕（用于按钮或提示） */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(236, 72, 153, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.6);
+  }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+/* 确保图片适应容器 */
+img {
+  @apply object-cover;
+}
+
+/* 自定义选择颜色 */
+::selection {
+  background: rgba(236, 72, 153, 0.3);
+  color: white;
+}
