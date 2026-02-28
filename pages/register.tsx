@@ -1,0 +1,801 @@
+import { useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import {
+  emptyRegistrationFormData,
+  PHOTO_ALLOWED_MIME_TYPES,
+  PHOTO_MAX_BYTES,
+  type Language,
+  type RegistrationFormData,
+  validateRegistrationForm,
+} from '@/lib/registration';
+import { registrationTranslations } from '@/lib/registrationTranslations';
+
+type ErrorMap = Record<string, string>;
+
+interface CityNode {
+  code: string;
+  name: string;
+  name_en: string;
+}
+
+interface ProvinceNode {
+  code: string;
+  name: string;
+  name_en: string;
+  cities: CityNode[];
+}
+
+interface CountryNode {
+  code: string;
+  name: string;
+  name_en: string;
+  provinces: ProvinceNode[];
+}
+
+interface CitiesData {
+  countries: CountryNode[];
+}
+
+const MBTI_VALUES = [
+  'INTJ',
+  'ENTJ',
+  'INTP',
+  'ENTP',
+  'INFJ',
+  'INFP',
+  'ENFJ',
+  'ENFP',
+  'ISTJ',
+  'ISFJ',
+  'ESTJ',
+  'ESFJ',
+  'ISTP',
+  'ISFP',
+  'ESTP',
+  'ESFP',
+  'unknown',
+];
+
+const ZODIAC_VALUES = [
+  'aries',
+  'taurus',
+  'gemini',
+  'cancer',
+  'leo',
+  'virgo',
+  'libra',
+  'scorpio',
+  'sagittarius',
+  'capricorn',
+  'aquarius',
+  'pisces',
+];
+
+const DRAFT_KEY = 'spectrum_registration_draft_v1';
+
+function cn(...parts: Array<string | false | undefined>) {
+  return parts.filter(Boolean).join(' ');
+}
+
+function ChoiceGroup({
+  values,
+  selected,
+  onChange,
+  labels,
+  multi = false,
+  max,
+}: {
+  values: string[];
+  selected: string | string[];
+  onChange: (next: string | string[]) => void;
+  labels: Record<string, string>;
+  multi?: boolean;
+  max?: number;
+}) {
+  const selectedSet = new Set(Array.isArray(selected) ? selected : [selected]);
+  return (
+    <div className="flex flex-wrap gap-2">
+      {values.map((value) => {
+        const active = selectedSet.has(value);
+        return (
+          <button
+            key={value}
+            type="button"
+            onClick={() => {
+              if (!multi) {
+                onChange(value);
+                return;
+              }
+              const current = Array.isArray(selected) ? selected : [];
+              if (active) {
+                onChange(current.filter((item) => item !== value));
+                return;
+              }
+              if (max && current.length >= max) return;
+              onChange([...current, value]);
+            }}
+            className={cn(
+              'rounded-full border px-3 py-1.5 text-sm transition',
+              active
+                ? 'border-transparent bg-gradient-to-r from-[#ff8a63] via-[#d868ff] to-[#5fd6ff] text-white shadow-[0_6px_18px_rgba(157,92,255,0.25)]'
+                : 'border-[#c8d2e3] bg-white/70 text-[#344057] hover:border-[#9ac6ff]'
+            )}
+          >
+            {labels[value] ?? value}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Field({
+  label,
+  required,
+  error,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block space-y-1.5">
+      <div className="flex items-center gap-2 text-sm font-semibold text-[#313e55]">
+        <span>{label}</span>
+        {required ? <span className="rounded-full bg-[#e8f5ff] px-2 py-0.5 text-[10px] text-[#4d5f88]">Required</span> : null}
+      </div>
+      {children}
+      {error ? <p className="text-xs text-[#d94c7a]">{error}</p> : null}
+    </label>
+  );
+}
+
+export default function RegistrationPage() {
+  const [lang, setLang] = useState<Language>('zh');
+  const [step, setStep] = useState(0);
+  const [form, setForm] = useState<RegistrationFormData>(emptyRegistrationFormData());
+  const [errors, setErrors] = useState<ErrorMap>({});
+  const [citiesData, setCitiesData] = useState<CitiesData | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [tip, setTip] = useState('');
+
+  const t = registrationTranslations[lang];
+
+  const country = useMemo(
+    () => citiesData?.countries.find((item) => item.code === form.location.country),
+    [citiesData, form.location.country]
+  );
+  const provinces = country?.provinces ?? [];
+  const selectedProvince = provinces.find((item) => item.code === form.location.province);
+  const cityOptions = selectedProvince?.cities ?? [];
+
+  useEffect(() => {
+    fetch('/cities.json')
+      .then((resp) => resp.json())
+      .then((data: CitiesData) => setCitiesData(data))
+      .catch(() => setCitiesData({ countries: [] }));
+  }, []);
+
+  useEffect(() => {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as RegistrationFormData;
+      setForm(parsed);
+      setTip(t.restoredDraft);
+      setTimeout(() => setTip(''), 2500);
+    } catch {
+      window.localStorage.removeItem(DRAFT_KEY);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+    setTip(t.savedDraft);
+    const timer = setTimeout(() => setTip(''), 1200);
+    return () => clearTimeout(timer);
+  }, [form, t.savedDraft]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const setField = <K extends keyof RegistrationFormData>(key: K, value: RegistrationFormData[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const setLocation = (patch: Partial<RegistrationFormData['location']>) => {
+    setForm((prev) => ({ ...prev, location: { ...prev.location, ...patch } }));
+  };
+
+  const onPhotoPicked = (file: File) => {
+    if (!PHOTO_ALLOWED_MIME_TYPES.includes(file.type)) {
+      setErrors((prev) => ({ ...prev, photos: t.uploadInvalidType }));
+      return;
+    }
+    if (file.size > PHOTO_MAX_BYTES) {
+      setErrors((prev) => ({ ...prev, photos: t.uploadInvalidSize }));
+      return;
+    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    const nextPreview = URL.createObjectURL(file);
+    setPhotoFile(file);
+    setPreviewUrl(nextPreview);
+    setField('photos', [nextPreview]);
+    setErrors((prev) => ({ ...prev, photos: '' }));
+  };
+
+  const sanitizePayload = (input: RegistrationFormData) => {
+    const payload: RegistrationFormData = {
+      ...input,
+      location:
+        input.location.country === 'CN'
+          ? {
+              country: input.location.country,
+              province: input.location.province || '',
+              city: input.location.city || '',
+            }
+          : { country: input.location.country },
+      hobbies_custom: input.hobbies.includes('custom') ? input.hobbies_custom : '',
+      color_mood_custom: input.color_mood === 'custom' ? input.color_mood_custom : '',
+      scent_memory_custom: input.scent_memory === 'custom' ? input.scent_memory_custom : '',
+      ritual_custom: input.ritual === 'custom' ? input.ritual_custom : '',
+      valued_traits_custom: input.valued_traits.includes('custom') ? input.valued_traits_custom : '',
+    };
+    return payload;
+  };
+
+  const submit = async () => {
+    setSubmitState('submitting');
+    try {
+      let photoUrl = form.photos[0] || '';
+      if (photoFile) {
+        const body = new FormData();
+        body.append('file', photoFile);
+        const uploadResp = await fetch('/api/upload', {
+          method: 'POST',
+          body,
+        });
+        if (uploadResp.ok) {
+          const uploadResult = (await uploadResp.json()) as { url?: string };
+          photoUrl = uploadResult.url || photoUrl;
+        }
+      }
+
+      const payload = sanitizePayload({
+        ...form,
+        photos: photoUrl ? [photoUrl] : form.photos,
+      });
+
+      const result = validateRegistrationForm(payload);
+      if (!result.isValid) {
+        setErrors(result.errors);
+        setSubmitState('error');
+        return;
+      }
+
+      // 当前项目后端尚未切换到新 schema，先输出最终 payload，后续对接新 API。
+      // eslint-disable-next-line no-console
+      console.log('registration payload', payload);
+
+      setSubmitState('success');
+      window.localStorage.removeItem(DRAFT_KEY);
+    } catch {
+      setSubmitState('error');
+    }
+  };
+
+  const validateAndNext = () => {
+    const result = validateRegistrationForm(sanitizePayload(form));
+    setErrors(result.errors);
+    if (step < 6) {
+      setStep((prev) => prev + 1);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_15%_10%,#fff5ed_0%,#eaf2f8_44%,#dff2ff_100%)] p-4 text-[#25324a] md:p-8">
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(96,128,167,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(96,128,167,0.12)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:linear-gradient(to_bottom,transparent,black_48%,black)] opacity-30" />
+      <div className="relative mx-auto max-w-6xl rounded-[34px] border border-[#b5c4dd] bg-white/40 p-4 backdrop-blur-2xl shadow-[0_22px_58px_rgba(73,96,132,0.16)] md:p-8">
+        <div className="mb-5 flex items-center justify-between">
+          <h1 className="text-3xl font-black tracking-tight text-[#303a52]">{t.brand}</h1>
+          <button
+            type="button"
+            onClick={() => setLang((prev) => (prev === 'zh' ? 'en' : 'zh'))}
+            className="rounded-full border border-[#bed0eb] bg-white/70 px-4 py-1.5 text-sm font-semibold text-[#3f4e6f]"
+          >
+            {t.toggleLang}
+          </button>
+        </div>
+
+        <p className="mb-5 max-w-4xl text-sm leading-relaxed text-[#3a4662] md:text-[15px]">{t.welcome}</p>
+
+        <div className="mb-5 grid gap-3 md:grid-cols-7">
+          {t.sections.map((section, index) => (
+            <button
+              key={section.title}
+              type="button"
+              onClick={() => setStep(index)}
+              className={cn(
+                'rounded-2xl border px-3 py-2 text-left transition',
+                index === step
+                  ? 'border-transparent bg-gradient-to-r from-[#ff9364] via-[#d96cff] to-[#62d7ff] text-white'
+                  : 'border-[#cad8ea] bg-white/60'
+              )}
+            >
+              <p className="text-xs font-bold">{index + 1}</p>
+              <p className="text-sm font-semibold">{section.title}</p>
+            </button>
+          ))}
+        </div>
+
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.24 }}
+          className="rounded-3xl border border-[#c9d6e9] bg-white/70 p-4 shadow-[0_10px_30px_rgba(80,109,151,0.12)] md:p-6"
+        >
+          <h2 className="text-xl font-bold text-[#33415c]">{t.sections[step].title}</h2>
+          <p className="mb-5 mt-1 text-sm text-[#62718f]">{t.sections[step].description}</p>
+
+          {step === 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label={t.labels.nickname} required error={errors.nickname ? t.errors[errors.nickname] : ''}>
+                <input
+                  value={form.nickname}
+                  onChange={(e) => setField('nickname', e.target.value)}
+                  maxLength={20}
+                  placeholder={t.placeholders.nickname}
+                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                />
+              </Field>
+              <Field label={t.labels.birthday} required error={errors.birthday ? t.errors[errors.birthday] : ''}>
+                <input
+                  type="date"
+                  value={form.birthday}
+                  onChange={(e) => setField('birthday', e.target.value)}
+                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                />
+              </Field>
+
+              <Field label={t.labels.gender} required error={errors.gender ? t.errors[errors.gender] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.gender)}
+                  selected={form.gender}
+                  onChange={(next) => setField('gender', next as string)}
+                  labels={t.options.gender}
+                />
+              </Field>
+
+              <Field
+                label={t.labels.sexual_orientation}
+                required
+                error={errors.sexual_orientation ? t.errors[errors.sexual_orientation] : ''}
+              >
+                <ChoiceGroup
+                  values={Object.keys(t.options.sexual_orientation)}
+                  selected={form.sexual_orientation}
+                  onChange={(next) => setField('sexual_orientation', next as string)}
+                  labels={t.options.sexual_orientation}
+                />
+              </Field>
+
+              <Field label={t.labels.location_country} required error={errors.location ? t.errors[errors.location] : ''}>
+                <select
+                  value={form.location.country}
+                  onChange={(e) => {
+                    const code = e.target.value;
+                    setLocation({ country: code, province: '', city: '' });
+                  }}
+                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                >
+                  <option value="">-</option>
+                  {(citiesData?.countries || []).map((item) => (
+                    <option key={item.code} value={item.code}>
+                      {lang === 'zh' ? item.name : item.name_en}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              {form.location.country === 'CN' ? (
+                <>
+                  <Field
+                    label={t.labels.location_province}
+                    required
+                    error={errors.location_province ? t.errors[errors.location_province] : ''}
+                  >
+                    <select
+                      value={form.location.province || ''}
+                      onChange={(e) => setLocation({ province: e.target.value, city: '' })}
+                      className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                    >
+                      <option value="">-</option>
+                      {provinces.map((item) => (
+                        <option key={item.code} value={item.code}>
+                          {lang === 'zh' ? item.name : item.name_en}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label={t.labels.location_city} required error={errors.location_city ? t.errors[errors.location_city] : ''}>
+                    <select
+                      value={form.location.city || ''}
+                      onChange={(e) => setLocation({ city: e.target.value })}
+                      className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                    >
+                      <option value="">-</option>
+                      {cityOptions.map((item) => (
+                        <option key={item.code} value={item.code}>
+                          {lang === 'zh' ? item.name : item.name_en}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </>
+              ) : null}
+
+              <Field label={t.labels.mbti} required error={errors.mbti ? t.errors[errors.mbti] : ''}>
+                <select
+                  value={form.mbti}
+                  onChange={(e) => setField('mbti', e.target.value)}
+                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                >
+                  <option value="">-</option>
+                  {MBTI_VALUES.map((item) => (
+                    <option key={item} value={item}>
+                      {item === 'unknown' ? t.options.mbti.unknown : item}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label={t.labels.zodiac} required error={errors.zodiac ? t.errors[errors.zodiac] : ''}>
+                <select
+                  value={form.zodiac}
+                  onChange={(e) => setField('zodiac', e.target.value)}
+                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                >
+                  <option value="">-</option>
+                  {ZODIAC_VALUES.map((item) => (
+                    <option key={item} value={item}>
+                      {t.options.zodiac[item]}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label={t.labels.growth_environment} required error={errors.growth_environment ? t.errors[errors.growth_environment] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.growth_environment)}
+                  selected={form.growth_environment}
+                  onChange={(next) => setField('growth_environment', next as string)}
+                  labels={t.options.growth_environment}
+                />
+              </Field>
+
+              <Field label={t.labels.pet_preference} required error={errors.pet_preference ? t.errors[errors.pet_preference] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.pet_preference)}
+                  selected={form.pet_preference}
+                  onChange={(next) => setField('pet_preference', next as string)}
+                  labels={t.options.pet_preference}
+                />
+              </Field>
+
+              <div className="space-y-2 md:col-span-2">
+                <Field label={t.labels.hobbies} required error={errors.hobbies ? t.errors[errors.hobbies] : ''}>
+                  <ChoiceGroup
+                    values={Object.keys(t.options.hobbies)}
+                    selected={form.hobbies}
+                    onChange={(next) => setField('hobbies', next as string[])}
+                    labels={t.options.hobbies}
+                    multi
+                    max={5}
+                  />
+                </Field>
+                {form.hobbies.includes('custom') ? (
+                  <Field label={t.labels.hobbies_custom} required error={errors.hobbies_custom ? t.errors[errors.hobbies_custom] : ''}>
+                    <input
+                      value={form.hobbies_custom}
+                      onChange={(e) => setField('hobbies_custom', e.target.value)}
+                      placeholder={t.placeholders.hobbies_custom}
+                      className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                    />
+                  </Field>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          {step === 1 ? (
+            <div className="space-y-4">
+              <Field label={t.labels.sound_preference} required error={errors.sound_preference ? t.errors[errors.sound_preference] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.sound_preference)}
+                  selected={form.sound_preference}
+                  onChange={(next) => setField('sound_preference', next as string)}
+                  labels={t.options.sound_preference}
+                />
+              </Field>
+              <Field label={t.labels.color_mood} required error={errors.color_mood ? t.errors[errors.color_mood] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.color_mood)}
+                  selected={form.color_mood}
+                  onChange={(next) => setField('color_mood', next as string)}
+                  labels={t.options.color_mood}
+                />
+              </Field>
+              {form.color_mood === 'custom' ? (
+                <Field label={t.labels.color_mood_custom} required error={errors.color_mood_custom ? t.errors[errors.color_mood_custom] : ''}>
+                  <input
+                    value={form.color_mood_custom}
+                    onChange={(e) => setField('color_mood_custom', e.target.value)}
+                    placeholder={t.placeholders.color_mood_custom}
+                    className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                  />
+                </Field>
+              ) : null}
+
+              <Field label={t.labels.scent_memory} required error={errors.scent_memory ? t.errors[errors.scent_memory] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.scent_memory)}
+                  selected={form.scent_memory}
+                  onChange={(next) => setField('scent_memory', next as string)}
+                  labels={t.options.scent_memory}
+                />
+              </Field>
+              {form.scent_memory === 'custom' ? (
+                <Field label={t.labels.scent_memory_custom} required error={errors.scent_memory_custom ? t.errors[errors.scent_memory_custom] : ''}>
+                  <input
+                    value={form.scent_memory_custom}
+                    onChange={(e) => setField('scent_memory_custom', e.target.value)}
+                    placeholder={t.placeholders.scent_memory_custom}
+                    className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                  />
+                </Field>
+              ) : null}
+            </div>
+          ) : null}
+
+          {step === 2 ? (
+            <div className="space-y-4">
+              <Field label={t.labels.ritual} required error={errors.ritual ? t.errors[errors.ritual] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.ritual)}
+                  selected={form.ritual}
+                  onChange={(next) => setField('ritual', next as string)}
+                  labels={t.options.ritual}
+                />
+              </Field>
+              {form.ritual === 'custom' ? (
+                <Field label={t.labels.ritual_custom} required error={errors.ritual_custom ? t.errors[errors.ritual_custom] : ''}>
+                  <input
+                    value={form.ritual_custom}
+                    onChange={(e) => setField('ritual_custom', e.target.value)}
+                    placeholder={t.placeholders.ritual_custom}
+                    className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                  />
+                </Field>
+              ) : null}
+              <Field label={t.labels.food_adventure} required error={errors.food_adventure ? t.errors[errors.food_adventure] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.food_adventure)}
+                  selected={form.food_adventure}
+                  onChange={(next) => setField('food_adventure', next as string)}
+                  labels={t.options.food_adventure}
+                />
+              </Field>
+            </div>
+          ) : null}
+          {step === 3 ? (
+            <div className="space-y-4">
+              <Field label={t.labels.conflict_reaction} required error={errors.conflict_reaction ? t.errors[errors.conflict_reaction] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.conflict_reaction)}
+                  selected={form.conflict_reaction}
+                  onChange={(next) => setField('conflict_reaction', next as string)}
+                  labels={t.options.conflict_reaction}
+                />
+              </Field>
+              <Field label={t.labels.recharge_style} required error={errors.recharge_style ? t.errors[errors.recharge_style] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.recharge_style)}
+                  selected={form.recharge_style}
+                  onChange={(next) => setField('recharge_style', next as string)}
+                  labels={t.options.recharge_style}
+                />
+              </Field>
+            </div>
+          ) : null}
+
+          {step === 4 ? (
+            <div className="space-y-4">
+              <Field label={t.labels.mystery_question} required error={errors.mystery_question ? t.errors[errors.mystery_question] : ''}>
+                <input
+                  value={form.mystery_question}
+                  onChange={(e) => setField('mystery_question', e.target.value)}
+                  maxLength={50}
+                  placeholder={t.placeholders.mystery_question}
+                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                />
+              </Field>
+              <Field label={t.labels.mystery_answer} required error={errors.mystery_answer ? t.errors[errors.mystery_answer] : ''}>
+                <textarea
+                  value={form.mystery_answer}
+                  onChange={(e) => setField('mystery_answer', e.target.value)}
+                  maxLength={100}
+                  placeholder={t.placeholders.mystery_answer}
+                  className="min-h-[92px] w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                />
+              </Field>
+            </div>
+          ) : null}
+
+          {step === 5 ? (
+            <div className="space-y-4">
+              <Field label={t.labels.valued_traits} required error={errors.valued_traits ? t.errors[errors.valued_traits] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.valued_traits)}
+                  selected={form.valued_traits}
+                  onChange={(next) => setField('valued_traits', next as string[])}
+                  labels={t.options.valued_traits}
+                  multi
+                  max={3}
+                />
+              </Field>
+              {form.valued_traits.includes('custom') ? (
+                <Field label={t.labels.valued_traits_custom} required error={errors.valued_traits_custom ? t.errors[errors.valued_traits_custom] : ''}>
+                  <input
+                    value={form.valued_traits_custom}
+                    onChange={(e) => setField('valued_traits_custom', e.target.value)}
+                    placeholder={t.placeholders.valued_traits_custom}
+                    className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                  />
+                </Field>
+              ) : null}
+              <Field label={t.labels.relationship_goal} required error={errors.relationship_goal ? t.errors[errors.relationship_goal] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.relationship_goal)}
+                  selected={form.relationship_goal}
+                  onChange={(next) => setField('relationship_goal', next as string[])}
+                  labels={t.options.relationship_goal}
+                  multi
+                  max={2}
+                />
+              </Field>
+            </div>
+          ) : null}
+
+          {step === 6 ? (
+            <div className="space-y-4">
+              <Field label={t.labels.photos} required error={errors.photos || (errors.photos ? t.errors[errors.photos] : '')}>
+                <label
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const dropped = e.dataTransfer.files?.[0];
+                    if (dropped) onPhotoPicked(dropped);
+                  }}
+                  className="group block cursor-pointer rounded-2xl border border-dashed border-[#9cc4ee] bg-white/60 p-4"
+                >
+                  <input
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.heic,.heif,image/jpeg,image/png,image/heic,image/heif"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) onPhotoPicked(file);
+                    }}
+                  />
+                  {!previewUrl ? (
+                    <div className="space-y-2 text-center">
+                      <p className="text-sm font-semibold text-[#3b4b68]">{t.uploadDropHint}</p>
+                      <p className="text-xs text-[#6c7a98]">{t.uploadHint}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <img src={previewUrl} alt="preview" className="h-44 w-44 rounded-2xl object-cover" />
+                      <button
+                        type="button"
+                        className="rounded-full border border-[#c8d2e3] px-3 py-1 text-xs text-[#3e4a66]"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setPreviewUrl('');
+                          setPhotoFile(null);
+                          setField('photos', []);
+                        }}
+                      >
+                        {t.removePhoto}
+                      </button>
+                    </div>
+                  )}
+                </label>
+              </Field>
+
+              <Field label={t.labels.avatar_filter} required error={errors.avatar_filter ? t.errors[errors.avatar_filter] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.avatar_filter)}
+                  selected={form.avatar_filter}
+                  onChange={(next) => setField('avatar_filter', next as string)}
+                  labels={t.options.avatar_filter}
+                />
+              </Field>
+              <Field label={t.labels.contact_info} required error={errors.contact_info ? t.errors[errors.contact_info] : ''}>
+                <input
+                  value={form.contact_info}
+                  onChange={(e) => setField('contact_info', e.target.value)}
+                  placeholder={t.placeholders.contact_info}
+                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                />
+              </Field>
+              <Field label={t.labels.match_limit} required error={errors.match_limit ? t.errors[errors.match_limit] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.match_limit)}
+                  selected={form.match_limit}
+                  onChange={(next) => setField('match_limit', next as string)}
+                  labels={t.options.match_limit}
+                />
+              </Field>
+              <label className="flex items-start gap-2 rounded-xl border border-[#cad7ea] bg-white/65 p-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.agree_terms}
+                  onChange={(e) => setField('agree_terms', e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-[#9eb6d5]"
+                />
+                <span>
+                  {t.termsPrefix} {t.termsUser} {t.termsAnd} {t.termsPrivacy}
+                </span>
+              </label>
+              {errors.agree_terms ? <p className="text-xs text-[#d94c7a]">{t.errors.required}</p> : null}
+            </div>
+          ) : null}
+        </motion.div>
+
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-xs text-[#5f6e8b]">{tip}</div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setStep((prev) => Math.max(0, prev - 1))}
+              disabled={step === 0 || submitState === 'submitting'}
+              className="rounded-full border border-[#cad7ea] bg-white/70 px-4 py-2 text-sm disabled:opacity-40"
+            >
+              {t.prev}
+            </button>
+            {step < 6 ? (
+              <button
+                type="button"
+                onClick={validateAndNext}
+                className="rounded-full bg-gradient-to-r from-[#ff9165] via-[#d76cff] to-[#61d7ff] px-5 py-2 text-sm font-semibold text-white"
+              >
+                {t.next}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={submit}
+                disabled={submitState === 'submitting'}
+                className="rounded-full bg-gradient-to-r from-[#ff9165] via-[#d76cff] to-[#61d7ff] px-5 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {submitState === 'submitting' ? t.saving : t.submit}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-[#c7d6ea] bg-white/55 px-4 py-3 text-sm text-[#4f5f7d]">{t.submitHint}</div>
+        {submitState === 'success' ? <p className="mt-3 text-sm text-[#2a8e5b]">{t.submitSuccess}</p> : null}
+        {submitState === 'error' ? <p className="mt-3 text-sm text-[#c54a78]">{t.submitFailed}</p> : null}
+      </div>
+    </div>
+  );
+}

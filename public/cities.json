@@ -1,0 +1,49 @@
+{
+  "countries": [
+    {
+      "code": "CN",
+      "name": "中国",
+      "name_en": "China",
+      "provinces": [
+        {
+          "code": "BJ",
+          "name": "北京市",
+          "name_en": "Beijing",
+          "cities": [
+            { "code": "BJ001", "name": "北京市", "name_en": "Beijing" }
+          ]
+        },
+        {
+          "code": "GD",
+          "name": "广东省",
+          "name_en": "Guangdong",
+          "cities": [
+            { "code": "GZ", "name": "广州市", "name_en": "Guangzhou" },
+            { "code": "SZ", "name": "深圳市", "name_en": "Shenzhen" }
+          ]
+        },
+        {
+          "code": "SH",
+          "name": "上海市",
+          "name_en": "Shanghai",
+          "cities": [
+            { "code": "SH001", "name": "上海市", "name_en": "Shanghai" }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "US",
+      "name": "美国",
+      "name_en": "United States",
+      "provinces": []
+    },
+    {
+      "code": "JP",
+      "name": "日本",
+      "name_en": "Japan",
+      "provinces": []
+    }
+  ]
+}
+
