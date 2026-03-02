@@ -618,6 +618,7 @@ export default function RegistrationPage() {
                 <DatePicker
                   format="YYYY-MM-DD"
                   value={form.birthday ? dayjs(form.birthday, 'YYYY-MM-DD') : null}
+                  placeholder={lang === 'zh' ? '请选择' : 'Please select'}
                   onChange={(_, dateString) => {
                     const nextValue = typeof dateString === 'string' ? dateString : '';
                     setField('birthday', nextValue);

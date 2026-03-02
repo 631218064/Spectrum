@@ -37,7 +37,7 @@
 | 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
 |--------|------|---------------|-------------|----------|
 | `nickname` | 文本输入 | 昵称 / Nickname | 用于匹配过程中显示 | 必填，1-20字符 |
-| `birthday` | 日期选择 | 出生年月日 / Date of Birth | 选择年、月、日 | 必填，需为过去日期，且年龄 `18+`（北京时间） |
+| `birthday` | 日期选择 | 出生日期 / Date of Birth | 选择年、月、日 | 必填，需为过去日期，且年龄 `18+`（北京时间） |
 | `gender` | 单选 | 性别 / Gender | `male`（男 / Male）<br>`female`（女 / Female）<br>`non_binary`（非二元 / Non-binary）<br>`prefer_not_to_say`（不愿透露 / Prefer not to say） | 必选 |
 | `sexual_orientation` | 单选 | 性取向 / Sexual Orientation | `heterosexual`（异性恋 / Heterosexual）<br>`homosexual`（同性恋 / Homosexual）<br>`bisexual`（双性恋 / Bisexual）<br>`pansexual`（泛性恋 / Pansexual）<br>`queer`（酷儿 / Queer）<br>`exploring`（其他/仍在探索 / Other / Exploring） | 必选 |
 | `location` | 联动选择 | 所在城市 / Location | 1. 先选择国家；若国家为中国（`CN`），继续选择省份、城市（三级联动）。<br>2. 若为其他国家，仅选择国家（一级）。<br>3. 使用静态 `cities.json`。 | 必选到对应级别；不允许空值 |

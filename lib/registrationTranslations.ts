@@ -1,4 +1,4 @@
-import type { Language } from './registration';
+﻿import type { Language } from './registration';
 
 type OptionDict = Record<string, string>;
 
@@ -99,7 +99,7 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
     ],
     labels: {
       nickname: '昵称',
-      birthday: '出生年月日',
+      birthday: '出生日期',
       gender: '性别',
       sexual_orientation: '性取向',
       location_country: '国家',
