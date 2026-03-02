@@ -150,7 +150,7 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
       size: '选项数量不符合要求',
       invalid: '字段格式无效',
       past_date: '生日必须是过去日期',
-      adult_only: '需年满 18 岁（北京时间）',
+      adult_only: '仅支持年满 18 岁的用户注册',
       submit: '请先修正高亮字段后再提交',
     },
     options: {
@@ -390,7 +390,7 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
       size: 'Selection count is out of range',
       invalid: 'Invalid value',
       past_date: 'Birthday must be in the past',
-      adult_only: 'Must be 18+ in Beijing time',
+      adult_only: 'Only users aged 18+ can register',
       submit: 'Please fix highlighted fields before submitting',
     },
     options: {
@@ -541,4 +541,3 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
     },
   },
 };
-

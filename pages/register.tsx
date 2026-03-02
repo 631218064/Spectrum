@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { PlusOutlined } from '@ant-design/icons';
-import type { UploadFile, UploadProps } from 'antd';
-import Upload from 'antd/es/upload/Upload';
+import dayjs from 'dayjs';
+import DatePicker from 'antd/lib/date-picker';
+import Upload from 'antd/lib/upload';
+import type { UploadFile, UploadProps } from 'antd/lib/upload/interface';
 import {
   emptyRegistrationFormData,
+  isAdultInBeijing,
+  isPastDateInBeijing,
   PHOTO_ALLOWED_MIME_TYPES,
   PHOTO_MAX_BYTES,
   PHOTOS_MAX_COUNT,
@@ -229,6 +233,22 @@ export default function RegistrationPage() {
 
   const setLocation = (patch: Partial<RegistrationFormData['location']>) => {
     setForm((prev) => ({ ...prev, location: { ...prev.location, ...patch } }));
+  };
+
+  const validateBirthdayNow = (value: string) => {
+    if (!value) {
+      setErrors((prev) => ({ ...prev, birthday: 'required' }));
+      return;
+    }
+    if (!isPastDateInBeijing(value)) {
+      setErrors((prev) => ({ ...prev, birthday: 'past_date' }));
+      return;
+    }
+    if (!isAdultInBeijing(value)) {
+      setErrors((prev) => ({ ...prev, birthday: 'adult_only' }));
+      return;
+    }
+    setErrors((prev) => ({ ...prev, birthday: '' }));
   };
 
   const syncPhotosToForm = (nextFileList: UploadFile[]) => {
@@ -494,12 +514,26 @@ export default function RegistrationPage() {
                   className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                 />
               </Field>
-              <Field label={t.labels.birthday} required error={errors.birthday ? t.errors[errors.birthday] : ''}>
-                <input
-                  type="date"
-                  value={form.birthday}
-                  onChange={(e) => setField('birthday', e.target.value)}
-                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+              <Field
+                label={t.labels.birthday}
+                required
+                error={
+                  errors.birthday
+                    ? t.errors[errors.birthday]
+                    : ''
+                }
+              >
+                <DatePicker
+                  format="YYYY-MM-DD"
+                  value={form.birthday ? dayjs(form.birthday, 'YYYY-MM-DD') : null}
+                  onChange={(_, dateString) => {
+                    const nextValue = typeof dateString === 'string' ? dateString : '';
+                    setField('birthday', nextValue);
+                    validateBirthdayNow(nextValue);
+                  }}
+                  style={{ width: '100%', height: 42, borderRadius: 12 }}
+                  className="border-[#cad7ea] bg-white outline-none ring-[#97c1ff] focus:ring"
+                  allowClear
                 />
               </Field>
 
@@ -909,8 +943,15 @@ export default function RegistrationPage() {
         }
         .photo-wall .ant-upload-list-item-container,
         .photo-wall .ant-upload.ant-upload-select {
+          position: relative !important;
+          overflow: hidden !important;
           width: 120px !important;
           height: 120px !important;
+          min-width: 120px !important;
+          min-height: 120px !important;
+          max-width: 120px !important;
+          max-height: 120px !important;
+          flex: 0 0 120px !important;
           margin: 0 !important;
           border-radius: 12px;
         }
@@ -919,14 +960,39 @@ export default function RegistrationPage() {
           background: #e8f0f8;
         }
         .photo-wall .ant-upload-list-item {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
           border-radius: 12px;
           overflow: hidden;
+        }
+        .photo-wall .ant-upload-list-item-actions {
+          pointer-events: none !important;
+        }
+        .photo-wall .ant-upload-list-item-actions a,
+        .photo-wall .ant-upload-list-item-actions button,
+        .photo-wall .ant-upload-list-item-actions .anticon {
+          pointer-events: auto !important;
+        }
+        .photo-wall .ant-upload-list-item-thumbnail,
+        .photo-wall .ant-upload-list-item-thumbnail img,
+        .photo-wall .ant-upload-list-item-image {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          display: block !important;
         }
         @media (max-width: 768px) {
           .photo-wall .ant-upload-list-item-container,
           .photo-wall .ant-upload.ant-upload-select {
             width: 100px !important;
             height: 100px !important;
+            min-width: 100px !important;
+            min-height: 100px !important;
+            max-width: 100px !important;
+            max-height: 100px !important;
+            flex: 0 0 100px !important;
           }
         }
       `}</style>

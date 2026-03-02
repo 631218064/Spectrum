@@ -17,6 +17,18 @@
 
 ---
 
+### 照片墙（新增，位于第一部分上方）
+**描述（需翻译）**：
+- 中文：第一张图将作为你的主头像。匹配过程中，每天会解锁一张新照片（Day1解锁第一张，Day2解锁第二张，...，Day5解锁剩余全部）。
+- 英文：The first photo will be your main avatar. During matching, one new photo will be unlocked each day (Day 1: photo 1, Day 2: photo 2, ..., Day 5: all remaining photos).
+
+| 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
+|--------|------|---------------|-------------|----------|
+| `photos` | 图片上传（照片墙） | 照片墙 / Photo Wall | 使用 Ant Design `Upload`（`listType=\"picture-card\"`），支持缩略图、删除、拖拽排序（按展示顺序存储） | 必填，1-10张；格式 JPG/PNG/HEIC；单张 <=10MB；第一张默认为主头像 |
+
+
+---
+
 ### 第一部分：基础档案  
 **描述（需翻译）**：  
 - 中文：这一部分帮助我们构建你的基本画像，也是生成线索的底色。  
@@ -32,6 +44,8 @@
 | `mbti` | 下拉选择 | MBTI 类型 / MBTI Type | 标准16型（如 `INTJ`、`INFP`），加 `unknown`（暂不了解，但愿意探索） | 必选 |
 | `zodiac` | 下拉选择 | 星座 / Zodiac | 标准12星座 | 必选 |
 | `growth_environment` | 单选 | 成长环境 / Childhood Environment | `happy_family`（家庭幸福 / Happy family）<br>`independent`（独立成长 / Independent）<br>`complex`（情况复杂 / Complex）<br>`prefer_not_to_say`（不想说 / Prefer not to say） | 必选 |
+| `financial_status` | 单选 | 经济情况 / Financial Status | `student`（学生 / Student）<br>`employed`（上班族 / Employed）<br>`self_employed`（自由职业 / Self-employed）<br>`prefer_not_to_say`（不想说 / Prefer not to say） | 必选 |
+| `education` | 单选 | 学历 / Education | `high_school`（高中及以下 / High school or below）<br>`associate`（专科 / Associate degree）<br>`bachelor`（本科 / Bachelor‘s degree）<br>`master`（硕士 / Master’s degree）<br>`doctor`（博士 / Doctorate）<br>`prefer_not_to_say`（不想说 / Prefer not to say） | 必选 |
 | `pet_preference` | 单选 | 宠物偏好 / Pet Preference | `cat`（猫派 / Cat person）<br>`dog`（狗派 / Dog person）<br>`other_pet`（其他小动物派 / Other small pets）<br>`no_pet_now`（目前没养，但对宠物无感 / Don't have one now, but fine with pets）<br>`allergic`（对动物过敏或害怕 / Allergic or afraid） | 必选 |
 | `hobbies` | 多选（最多5项） | 兴趣爱好 / Hobbies | 选项见下方列表，含 `custom`（需输入框） | 至少1项，最多5项；`custom` 计入上限 |
 
@@ -118,10 +132,7 @@
 
 | 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
 |--------|------|---------------|-------------|----------|
-| `photos` | 图片上传 | 个人照片 / Profile Photos | 上传真实照片（1张）。支持预览、删除、拖拽适配窗口。 | 必填，1张；图片格式：JPG、PNG、HEIC；单张不超过10MB；建议尺寸 500x500 以上 |
-| `avatar_filter` | 单选 | 外貌滤镜 / Avatar Filter | `cartoon`（卡通化头像）<br>`blur`（模糊真实照片，逐渐清晰）<br>注：第五天自动公开真实照片 | 必选 |
 | `contact_info` | 文本输入 | 联系方式 / Contact Info | 如微信号、其他社交账号，第五天自动公开 | 必填；仅校验非空 |
-| `match_limit` | 单选 | 同时匹配上限 / Concurrent Match Limit | `1`、`3`、`5`（默认显示3，用户可调整但不超过系统上限5） | 必选 |
 | `agree_terms` | 复选框 | 同意条款 / Agree to Terms | 我已阅读并同意《用户协议》和《隐私政策》 | 必须勾选 |
 
 ---
@@ -148,6 +159,8 @@
   "mbti": "INFP",
   "zodiac": "pisces",
   "growth_environment": "happy_family",
+  "financial_status": "employed",
+  "education": "bachelor",
   "pet_preference": "cat",
   "hobbies": ["reading_writing", "movies_tv", "custom"],
   "hobbies_custom": "观鸟",
@@ -165,10 +178,15 @@
   "valued_traits": ["humor", "gentle", "custom"],
   "valued_traits_custom": "边界感",
   "relationship_goal": ["deep_connection", "stable_partner"],
-  "photos": ["https://your-project.supabase.co/storage/v1/object/public/profiles/xxx.jpg"],
+  "photos": [
+    "https://your-project.supabase.co/storage/v1/object/public/profiles/xxx_1.jpg",
+    "https://your-project.supabase.co/storage/v1/object/public/profiles/xxx_2.jpg"
+  ],
   "avatar_filter": "blur",
   "contact_info": "wechat_abc123",
-  "match_limit": "3",
+  "agree_terms": true
+}，
+  "contact_info": "wechat_abc123",
   "agree_terms": true
 }
 ```
@@ -182,7 +200,8 @@
 
 **photos 字段规则**：
 - 提交结构为字符串数组：`photos: string[]`。
-- 当前版本固定仅允许 1 张，因此数组长度必须为 `1`。
+- 当前版本允许 `1-10` 张图片。
+- 数组顺序即照片墙当前展示顺序（拖拽排序后顺序）。
 - 数组元素为上传成功后的公开 URL。
 
 ---
@@ -236,8 +255,9 @@
 
 ### 注意事项
 - 表单提交时，所有字段值应使用上述键值（如 `gender: "male"`）。
+- 照片墙中的第一张图片默认为主头像（`photos[0]`）。
 - `custom` 输入框显示逻辑必须由对应选项控制。
 - 验证规则需在前端和后端同时实施（后端可简化，但必填与关键格式必须保证）。
 - 所有 UI 展示文本（模块描述、选项文案、提示）均需纳入翻译。
-- `photos` 需在前后端同时校验格式与大小（JPG/PNG/HEIC，单张 <=10MB），并支持拖拽上传、预览与删除。
+- `photos` 需在前后端同时校验格式与大小（JPG/PNG/HEIC，单张 <=10MB），并支持拖拽排序、预览与删除。
 - 前端交互需保证分步引导、错误提示、草稿防丢、移动端适配、步骤切换平滑动画与提交后的完成反馈。
