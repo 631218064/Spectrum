@@ -25,6 +25,7 @@ interface RegistrationText {
   removePhoto: string;
   uploadHint: string;
   uploadDropHint: string;
+  photoWallHint: string;
   uploadInvalidType: string;
   uploadInvalidSize: string;
   termsPrefix: string;
@@ -41,6 +42,8 @@ interface RegistrationText {
     mbti: OptionDict;
     zodiac: OptionDict;
     growth_environment: OptionDict;
+    financial_status: OptionDict;
+    education: OptionDict;
     pet_preference: OptionDict;
     hobbies: OptionDict;
     sound_preference: OptionDict;
@@ -53,7 +56,6 @@ interface RegistrationText {
     valued_traits: OptionDict;
     relationship_goal: OptionDict;
     avatar_filter: OptionDict;
-    match_limit: OptionDict;
   };
 }
 
@@ -78,6 +80,8 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
     removePhoto: '删除照片',
     uploadHint: '支持 JPG / PNG / HEIC，单张不超过 10MB',
     uploadDropHint: '拖拽图片到此处，或点击选择',
+    photoWallHint:
+      '第一张图将作为你的主头像。匹配过程中，每天会解锁一张新照片（Day1解锁第一张，Day2解锁第二张，...，Day5解锁剩余全部）。',
     uploadInvalidType: '图片格式仅支持 JPG/PNG/HEIC',
     uploadInvalidSize: '图片大小不能超过 10MB',
     termsPrefix: '我已阅读并同意',
@@ -85,34 +89,13 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
     termsPrivacy: '《隐私政策》',
     termsAnd: '和',
     sections: [
-      {
-        title: '基础档案',
-        description: '这一部分帮助我们构建你的基本画像，也是生成线索的底色。',
-      },
-      {
-        title: '感官与直觉',
-        description: '这些问题没有对错，只有你独特的感知世界的方式。',
-      },
-      {
-        title: '生活仪式感与怪癖',
-        description: '微小而确定的习惯，构成了独一无二的你。',
-      },
-      {
-        title: '关系信念与情感模式',
-        description: '这部分将帮助我们寻找与你情感节奏同频的人。',
-      },
-      {
-        title: '留给未来的 TA',
-        description: '给未来匹配对象留一个无伤大雅的小谜题。',
-      },
-      {
-        title: '理想型与期待',
-        description: '你的偏好能帮助我们更精准地推荐。',
-      },
-      {
-        title: '隐私与设置',
-        description: '控制你的匹配体验。',
-      },
+      { title: '基础档案', description: '这一部分帮助我们构建你的基本画像，也是生成线索的底色。' },
+      { title: '感官与直觉', description: '这些问题没有对错，只有你独特的感知世界的方式。' },
+      { title: '生活仪式感与怪癖', description: '微小而确定的习惯，构成了独一无二的你。' },
+      { title: '关系信念与情感模式', description: '这部分将帮助我们寻找与你情感节奏同频的人。' },
+      { title: '留给未来的 TA', description: '给未来匹配对象留一个无伤大雅的小谜题。' },
+      { title: '理想型与期待', description: '你的偏好能帮助我们更精准地推荐。' },
+      { title: '隐私与设置', description: '控制你的匹配体验。' },
     ],
     labels: {
       nickname: '昵称',
@@ -125,6 +108,8 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
       mbti: 'MBTI 类型',
       zodiac: '星座',
       growth_environment: '成长环境',
+      financial_status: '经济情况',
+      education: '学历',
       pet_preference: '宠物偏好',
       hobbies: '兴趣爱好（最多 5 项）',
       hobbies_custom: '其他兴趣',
@@ -143,10 +128,9 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
       valued_traits: '最看重的三个特质',
       valued_traits_custom: '自定义特质',
       relationship_goal: '你期待在关系中收获什么',
-      photos: '个人照片',
+      photos: '照片墙',
       avatar_filter: '外貌滤镜',
       contact_info: '联系方式',
-      match_limit: '同时匹配上限',
       agree_terms: '同意条款',
     },
     placeholders: {
@@ -184,9 +168,7 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
         queer: '酷儿',
         exploring: '其他 / 仍在探索',
       },
-      mbti: {
-        unknown: 'unknown（愿意探索）',
-      },
+      mbti: { unknown: 'unknown（愿意探索）' },
       zodiac: {
         aries: '白羊座',
         taurus: '金牛座',
@@ -205,6 +187,20 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
         happy_family: '家庭幸福',
         independent: '独立成长',
         complex: '情况复杂',
+        prefer_not_to_say: '不想说',
+      },
+      financial_status: {
+        student: '学生',
+        employed: '上班族',
+        self_employed: '自由职业',
+        prefer_not_to_say: '不想说',
+      },
+      education: {
+        high_school: '高中及以下',
+        associate: '专科',
+        bachelor: '本科',
+        master: '硕士',
+        doctor: '博士',
         prefer_not_to_say: '不想说',
       },
       pet_preference: {
@@ -302,11 +298,6 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
         cartoon: '卡通化头像',
         blur: '模糊真实照片（逐渐清晰）',
       },
-      match_limit: {
-        '1': '1',
-        '3': '3',
-        '5': '5',
-      },
     },
   },
   en: {
@@ -329,6 +320,8 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
     removePhoto: 'Remove Photo',
     uploadHint: 'JPG / PNG / HEIC up to 10MB',
     uploadDropHint: 'Drag an image here, or click to select',
+    photoWallHint:
+      'The first photo will be your main avatar. During matching, one new photo will be unlocked each day (Day 1: photo 1, Day 2: photo 2, ..., Day 5: all remaining photos).',
     uploadInvalidType: 'Only JPG/PNG/HEIC are allowed',
     uploadInvalidSize: 'Image must be <= 10MB',
     termsPrefix: 'I have read and agree to',
@@ -336,34 +329,13 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
     termsPrivacy: 'Privacy Policy',
     termsAnd: 'and',
     sections: [
-      {
-        title: 'Profile & Identity',
-        description: 'This section helps us build your basic profile and clue foundation.',
-      },
-      {
-        title: 'Senses & Intuition',
-        description: 'No right or wrong answers, only your unique perception.',
-      },
-      {
-        title: 'Rituals & Quirks',
-        description: 'Small but definite habits are what make you uniquely you.',
-      },
-      {
-        title: 'Beliefs & Emotional Rhythm',
-        description: 'This helps us find someone who syncs with your emotional pace.',
-      },
-      {
-        title: 'A Note for Your Future Match',
-        description: 'Leave a lighthearted mystery question for day-one unlock.',
-      },
-      {
-        title: 'Ideal Traits & Expectations',
-        description: 'Your preferences help us recommend more precisely.',
-      },
-      {
-        title: 'Privacy & Settings',
-        description: 'Control your matching experience.',
-      },
+      { title: 'Profile & Identity', description: 'This section helps us build your basic profile and clue foundation.' },
+      { title: 'Senses & Intuition', description: 'No right or wrong answers, only your unique perception.' },
+      { title: 'Rituals & Quirks', description: 'Small but definite habits are what make you uniquely you.' },
+      { title: 'Beliefs & Emotional Rhythm', description: 'This helps us find someone who syncs with your emotional pace.' },
+      { title: 'A Note for Your Future Match', description: 'Leave a lighthearted mystery question for day-one unlock.' },
+      { title: 'Ideal Traits & Expectations', description: 'Your preferences help us recommend more precisely.' },
+      { title: 'Privacy & Settings', description: 'Control your matching experience.' },
     ],
     labels: {
       nickname: 'Nickname',
@@ -376,6 +348,8 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
       mbti: 'MBTI Type',
       zodiac: 'Zodiac',
       growth_environment: 'Childhood Environment',
+      financial_status: 'Financial Status',
+      education: 'Education',
       pet_preference: 'Pet Preference',
       hobbies: 'Hobbies (max 5)',
       hobbies_custom: 'Custom Hobby',
@@ -394,10 +368,9 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
       valued_traits: 'Top 3 Valued Traits',
       valued_traits_custom: 'Custom Trait',
       relationship_goal: 'What are you looking for?',
-      photos: 'Profile Photo',
+      photos: 'Photo Wall',
       avatar_filter: 'Avatar Filter',
       contact_info: 'Contact Info',
-      match_limit: 'Concurrent Match Limit',
       agree_terms: 'Agree to Terms',
     },
     placeholders: {
@@ -435,9 +408,7 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
         queer: 'Queer',
         exploring: 'Other / Exploring',
       },
-      mbti: {
-        unknown: 'Unknown (open to explore)',
-      },
+      mbti: { unknown: 'Unknown (open to explore)' },
       zodiac: {
         aries: 'Aries',
         taurus: 'Taurus',
@@ -456,6 +427,20 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
         happy_family: 'Happy family',
         independent: 'Independent upbringing',
         complex: 'Complex',
+        prefer_not_to_say: 'Prefer not to say',
+      },
+      financial_status: {
+        student: 'Student',
+        employed: 'Employed',
+        self_employed: 'Self-employed',
+        prefer_not_to_say: 'Prefer not to say',
+      },
+      education: {
+        high_school: 'High school or below',
+        associate: 'Associate degree',
+        bachelor: "Bachelor's degree",
+        master: "Master's degree",
+        doctor: 'Doctorate',
         prefer_not_to_say: 'Prefer not to say',
       },
       pet_preference: {
@@ -552,11 +537,6 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
       avatar_filter: {
         cartoon: 'Cartoonized avatar',
         blur: 'Blurred real photo (gradually reveal)',
-      },
-      match_limit: {
-        '1': '1',
-        '3': '3',
-        '5': '5',
       },
     },
   },

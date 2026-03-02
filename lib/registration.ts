@@ -15,6 +15,8 @@ export interface RegistrationFormData {
   mbti: string;
   zodiac: string;
   growth_environment: string;
+  financial_status: string;
+  education: string;
   pet_preference: string;
   hobbies: string[];
   hobbies_custom: string;
@@ -36,7 +38,6 @@ export interface RegistrationFormData {
   avatar_filter: string;
   photos: string[];
   contact_info: string;
-  match_limit: string;
   agree_terms: boolean;
 }
 
@@ -48,7 +49,8 @@ export interface ValidationResult {
 export const HOBBIES_MAX = 5;
 export const VALUED_TRAITS_MAX = 3;
 export const RELATIONSHIP_GOAL_MAX = 2;
-export const PHOTOS_COUNT = 1;
+export const PHOTOS_MIN_COUNT = 1;
+export const PHOTOS_MAX_COUNT = 10;
 export const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
 export const PHOTO_ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
 export const PHOTO_ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.heic', '.heif'];
@@ -61,6 +63,8 @@ const REQUIRED_STRING_FIELDS: Array<keyof RegistrationFormData> = [
   'mbti',
   'zodiac',
   'growth_environment',
+  'financial_status',
+  'education',
   'pet_preference',
   'sound_preference',
   'color_mood',
@@ -73,7 +77,6 @@ const REQUIRED_STRING_FIELDS: Array<keyof RegistrationFormData> = [
   'mystery_answer',
   'avatar_filter',
   'contact_info',
-  'match_limit',
 ];
 
 export function emptyRegistrationFormData(): RegistrationFormData {
@@ -86,6 +89,8 @@ export function emptyRegistrationFormData(): RegistrationFormData {
     mbti: '',
     zodiac: '',
     growth_environment: '',
+    financial_status: '',
+    education: '',
     pet_preference: '',
     hobbies: [],
     hobbies_custom: '',
@@ -107,7 +112,6 @@ export function emptyRegistrationFormData(): RegistrationFormData {
     avatar_filter: '',
     photos: [],
     contact_info: '',
-    match_limit: '3',
     agree_terms: false,
   };
 }
@@ -254,11 +258,7 @@ export function validateRegistrationForm(input: RegistrationFormData): Validatio
     errors.mystery_answer = 'length';
   }
 
-  if (!['1', '3', '5'].includes(data.match_limit)) {
-    errors.match_limit = 'invalid';
-  }
-
-  if (data.photos.length !== PHOTOS_COUNT) {
+  if (data.photos.length < PHOTOS_MIN_COUNT || data.photos.length > PHOTOS_MAX_COUNT) {
     errors.photos = 'size';
   }
 

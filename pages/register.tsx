@@ -1,14 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { PlusOutlined } from '@ant-design/icons';
+import type { UploadFile, UploadProps } from 'antd';
+import Upload from 'antd/es/upload/Upload';
 import {
   emptyRegistrationFormData,
   PHOTO_ALLOWED_MIME_TYPES,
   PHOTO_MAX_BYTES,
+  PHOTOS_MAX_COUNT,
   type Language,
   type RegistrationFormData,
   validateRegistrationForm,
 } from '@/lib/registration';
 import { registrationTranslations } from '@/lib/registrationTranslations';
+import { supabase } from '@/lib/supabase';
 
 type ErrorMap = Record<string, string>;
 
@@ -72,6 +77,7 @@ const ZODIAC_VALUES = [
 ];
 
 const DRAFT_KEY = 'spectrum_registration_draft_v1';
+const UPLOAD_LIST_IGNORE = (Upload as any).LIST_IGNORE;
 
 function cn(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(' ');
@@ -84,6 +90,7 @@ function ChoiceGroup({
   labels,
   multi = false,
   max,
+  noWrap = false,
 }: {
   values: string[];
   selected: string | string[];
@@ -91,10 +98,11 @@ function ChoiceGroup({
   labels: Record<string, string>;
   multi?: boolean;
   max?: number;
+  noWrap?: boolean;
 }) {
   const selectedSet = new Set(Array.isArray(selected) ? selected : [selected]);
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className={cn('flex gap-2', noWrap ? 'flex-nowrap overflow-x-auto pb-1' : 'flex-wrap')}>
       {values.map((value) => {
         const active = selectedSet.has(value);
         return (
@@ -116,6 +124,7 @@ function ChoiceGroup({
             }}
             className={cn(
               'rounded-full border px-3 py-1.5 text-sm transition',
+              noWrap && 'shrink-0 whitespace-nowrap',
               active
                 ? 'border-transparent bg-gradient-to-r from-[#ff8a63] via-[#d868ff] to-[#5fd6ff] text-white shadow-[0_6px_18px_rgba(157,92,255,0.25)]'
                 : 'border-[#c8d2e3] bg-white/70 text-[#344057] hover:border-[#9ac6ff]'
@@ -144,7 +153,6 @@ function Field({
     <label className="block space-y-1.5">
       <div className="flex items-center gap-2 text-sm font-semibold text-[#313e55]">
         <span>{label}</span>
-        {required ? <span className="rounded-full bg-[#e8f5ff] px-2 py-0.5 text-[10px] text-[#4d5f88]">Required</span> : null}
       </div>
       {children}
       {error ? <p className="text-xs text-[#d94c7a]">{error}</p> : null}
@@ -158,8 +166,8 @@ export default function RegistrationPage() {
   const [form, setForm] = useState<RegistrationFormData>(emptyRegistrationFormData());
   const [errors, setErrors] = useState<ErrorMap>({});
   const [citiesData, setCitiesData] = useState<CitiesData | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState('');
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [draggingUid, setDraggingUid] = useState<string | null>(null);
   const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [tip, setTip] = useState('');
 
@@ -202,10 +210,18 @@ export default function RegistrationPage() {
   }, [form, t.savedDraft]);
 
   useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
+    // 草稿恢复时，将已保存的 URL 映射为 Upload 的 fileList。
+    if (fileList.length === 0 && form.photos.length > 0) {
+      setFileList(
+        form.photos.map((url, index) => ({
+          uid: `saved-${index}`,
+          name: `photo-${index + 1}.jpg`,
+          status: 'done',
+          url,
+        }))
+      );
+    }
+  }, [fileList.length, form.photos]);
 
   const setField = <K extends keyof RegistrationFormData>(key: K, value: RegistrationFormData[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -215,21 +231,47 @@ export default function RegistrationPage() {
     setForm((prev) => ({ ...prev, location: { ...prev.location, ...patch } }));
   };
 
-  const onPhotoPicked = (file: File) => {
+  const syncPhotosToForm = (nextFileList: UploadFile[]) => {
+    const ordered = nextFileList
+      .map((file) => file.url || file.thumbUrl || '')
+      .filter((value) => Boolean(value));
+    setField('photos', ordered);
+  };
+
+  const handleBeforeUpload = (file: File) => {
     if (!PHOTO_ALLOWED_MIME_TYPES.includes(file.type)) {
       setErrors((prev) => ({ ...prev, photos: t.uploadInvalidType }));
-      return;
+      return UPLOAD_LIST_IGNORE;
     }
     if (file.size > PHOTO_MAX_BYTES) {
       setErrors((prev) => ({ ...prev, photos: t.uploadInvalidSize }));
-      return;
+      return UPLOAD_LIST_IGNORE;
     }
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    const nextPreview = URL.createObjectURL(file);
-    setPhotoFile(file);
-    setPreviewUrl(nextPreview);
-    setField('photos', [nextPreview]);
+    if (fileList.length >= PHOTOS_MAX_COUNT) {
+      return UPLOAD_LIST_IGNORE;
+    }
     setErrors((prev) => ({ ...prev, photos: '' }));
+    return false;
+  };
+
+  const handleUploadChange: UploadProps['onChange'] = ({ fileList: nextFileList }) => {
+    const normalized = nextFileList.slice(0, PHOTOS_MAX_COUNT).map((file) => {
+      if (!file.url && !file.thumbUrl && file.originFileObj) {
+        return { ...file, thumbUrl: URL.createObjectURL(file.originFileObj as File) };
+      }
+      return file;
+    });
+    setFileList(normalized);
+    syncPhotosToForm(normalized);
+  };
+
+  const moveFile = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+    const next = [...fileList];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    setFileList(next);
+    syncPhotosToForm(next);
   };
 
   const sanitizePayload = (input: RegistrationFormData) => {
@@ -252,26 +294,81 @@ export default function RegistrationPage() {
     return payload;
   };
 
+  const getStepKeys = (currentStep: number, currentForm: RegistrationFormData): string[] => {
+    if (currentStep === 0) {
+      return [
+        'photos',
+        'nickname',
+        'birthday',
+        'gender',
+        'sexual_orientation',
+        'location',
+        ...(currentForm.location.country === 'CN' ? ['location_province', 'location_city'] : []),
+        'mbti',
+        'zodiac',
+        'growth_environment',
+        'financial_status',
+        'education',
+        'pet_preference',
+        'hobbies',
+        ...(currentForm.hobbies.includes('custom') ? ['hobbies_custom'] : []),
+      ];
+    }
+    if (currentStep === 1) {
+      return [
+        'sound_preference',
+        'color_mood',
+        ...(currentForm.color_mood === 'custom' ? ['color_mood_custom'] : []),
+        'scent_memory',
+        ...(currentForm.scent_memory === 'custom' ? ['scent_memory_custom'] : []),
+      ];
+    }
+    if (currentStep === 2) {
+      return ['ritual', ...(currentForm.ritual === 'custom' ? ['ritual_custom'] : []), 'food_adventure'];
+    }
+    if (currentStep === 3) {
+      return ['conflict_reaction', 'recharge_style'];
+    }
+    if (currentStep === 4) {
+      return ['mystery_question', 'mystery_answer'];
+    }
+    if (currentStep === 5) {
+      return ['valued_traits', ...(currentForm.valued_traits.includes('custom') ? ['valued_traits_custom'] : []), 'relationship_goal'];
+    }
+    return ['avatar_filter', 'contact_info', 'agree_terms'];
+  };
+
+  const fullValidation = useMemo(() => validateRegistrationForm(sanitizePayload(form)), [form]);
+  const currentStepKeys = useMemo(() => getStepKeys(step, form), [step, form]);
+  const canGoNext = currentStepKeys.every((key) => !fullValidation.errors[key]);
+
   const submit = async () => {
     setSubmitState('submitting');
     try {
-      let photoUrl = form.photos[0] || '';
-      if (photoFile) {
-        const body = new FormData();
-        body.append('file', photoFile);
-        const uploadResp = await fetch('/api/upload', {
-          method: 'POST',
-          body,
-        });
-        if (uploadResp.ok) {
-          const uploadResult = (await uploadResp.json()) as { url?: string };
-          photoUrl = uploadResult.url || photoUrl;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      const orderedPhotoUrls: string[] = [];
+      for (const file of fileList) {
+        let resolvedUrl = file.url || file.thumbUrl || '';
+        if (file.originFileObj) {
+          const body = new FormData();
+          body.append('file', file.originFileObj as Blob);
+          const uploadResp = await fetch('/api/upload', {
+            method: 'POST',
+            body,
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
+          if (uploadResp.ok) {
+            const uploadResult = (await uploadResp.json()) as { url?: string };
+            resolvedUrl = uploadResult.url || resolvedUrl;
+          }
         }
+        if (resolvedUrl) orderedPhotoUrls.push(resolvedUrl);
       }
 
       const payload = sanitizePayload({
         ...form,
-        photos: photoUrl ? [photoUrl] : form.photos,
+        photos: orderedPhotoUrls,
       });
 
       const result = validateRegistrationForm(payload);
@@ -293,9 +390,8 @@ export default function RegistrationPage() {
   };
 
   const validateAndNext = () => {
-    const result = validateRegistrationForm(sanitizePayload(form));
-    setErrors(result.errors);
-    if (step < 6) {
+    setErrors(fullValidation.errors);
+    if (step < 6 && canGoNext) {
       setStep((prev) => prev + 1);
     }
   };
@@ -303,7 +399,7 @@ export default function RegistrationPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_15%_10%,#fff5ed_0%,#eaf2f8_44%,#dff2ff_100%)] p-4 text-[#25324a] md:p-8">
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(96,128,167,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(96,128,167,0.12)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:linear-gradient(to_bottom,transparent,black_48%,black)] opacity-30" />
-      <div className="relative mx-auto max-w-6xl rounded-[34px] border border-[#b5c4dd] bg-white/40 p-4 backdrop-blur-2xl shadow-[0_22px_58px_rgba(73,96,132,0.16)] md:p-8">
+      <div className="relative mx-auto max-w-[1182px] rounded-[34px] border border-[#b5c4dd] bg-white/40 p-4 backdrop-blur-2xl shadow-[0_22px_58px_rgba(73,96,132,0.16)] md:p-8">
         <div className="mb-5 flex items-center justify-between">
           <h1 className="text-3xl font-black tracking-tight text-[#303a52]">{t.brand}</h1>
           <button
@@ -316,6 +412,47 @@ export default function RegistrationPage() {
         </div>
 
         <p className="mb-5 max-w-4xl text-sm leading-relaxed text-[#3a4662] md:text-[15px]">{t.welcome}</p>
+
+        <div className="mb-6">
+          <Field label={t.labels.photos} required error={errors.photos ? t.errors[errors.photos] || errors.photos : ''}>
+            <div className="photo-wall">
+              <Upload
+                accept=".jpg,.jpeg,.png,.heic,.heif,image/jpeg,image/png,image/heic,image/heif"
+                listType="picture-card"
+                fileList={fileList}
+                beforeUpload={handleBeforeUpload}
+                onChange={handleUploadChange}
+                itemRender={(originNode, file) => {
+                  const currentIndex = fileList.findIndex((item) => item.uid === file.uid);
+                  return (
+                    <div
+                      draggable
+                      onDragStart={() => setDraggingUid(file.uid)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => {
+                        if (!draggingUid) return;
+                        const fromIndex = fileList.findIndex((item) => item.uid === draggingUid);
+                        moveFile(fromIndex, currentIndex);
+                        setDraggingUid(null);
+                      }}
+                      className="cursor-move"
+                    >
+                      {originNode}
+                    </div>
+                  );
+                }}
+              >
+                {fileList.length >= PHOTOS_MAX_COUNT ? null : (
+                  <button type="button" className="flex h-full w-full flex-col items-center justify-center border-0 bg-transparent">
+                    <PlusOutlined style={{ color: '#4658E1' }} />
+                    <div className="mt-2 text-xs text-[#4658E1]">Upload</div>
+                  </button>
+                )}
+              </Upload>
+            </div>
+          </Field>
+          <p className="mt-2 text-[14px] text-[#7E8C9D]">{t.photoWallHint}</p>
+        </div>
 
         <div className="mb-5 grid gap-3 md:grid-cols-7">
           {t.sections.map((section, index) => (
@@ -481,12 +618,31 @@ export default function RegistrationPage() {
                 />
               </Field>
 
+              <Field label={t.labels.financial_status} required error={errors.financial_status ? t.errors[errors.financial_status] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.financial_status)}
+                  selected={form.financial_status}
+                  onChange={(next) => setField('financial_status', next as string)}
+                  labels={t.options.financial_status}
+                />
+              </Field>
+
+              <Field label={t.labels.education} required error={errors.education ? t.errors[errors.education] : ''}>
+                <ChoiceGroup
+                  values={Object.keys(t.options.education)}
+                  selected={form.education}
+                  onChange={(next) => setField('education', next as string)}
+                  labels={t.options.education}
+                />
+              </Field>
+
               <Field label={t.labels.pet_preference} required error={errors.pet_preference ? t.errors[errors.pet_preference] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.pet_preference)}
                   selected={form.pet_preference}
                   onChange={(next) => setField('pet_preference', next as string)}
                   labels={t.options.pet_preference}
+                  noWrap
                 />
               </Field>
 
@@ -676,50 +832,6 @@ export default function RegistrationPage() {
 
           {step === 6 ? (
             <div className="space-y-4">
-              <Field label={t.labels.photos} required error={errors.photos || (errors.photos ? t.errors[errors.photos] : '')}>
-                <label
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const dropped = e.dataTransfer.files?.[0];
-                    if (dropped) onPhotoPicked(dropped);
-                  }}
-                  className="group block cursor-pointer rounded-2xl border border-dashed border-[#9cc4ee] bg-white/60 p-4"
-                >
-                  <input
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.heic,.heif,image/jpeg,image/png,image/heic,image/heif"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) onPhotoPicked(file);
-                    }}
-                  />
-                  {!previewUrl ? (
-                    <div className="space-y-2 text-center">
-                      <p className="text-sm font-semibold text-[#3b4b68]">{t.uploadDropHint}</p>
-                      <p className="text-xs text-[#6c7a98]">{t.uploadHint}</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <img src={previewUrl} alt="preview" className="h-44 w-44 rounded-2xl object-cover" />
-                      <button
-                        type="button"
-                        className="rounded-full border border-[#c8d2e3] px-3 py-1 text-xs text-[#3e4a66]"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setPreviewUrl('');
-                          setPhotoFile(null);
-                          setField('photos', []);
-                        }}
-                      >
-                        {t.removePhoto}
-                      </button>
-                    </div>
-                  )}
-                </label>
-              </Field>
-
               <Field label={t.labels.avatar_filter} required error={errors.avatar_filter ? t.errors[errors.avatar_filter] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.avatar_filter)}
@@ -734,14 +846,6 @@ export default function RegistrationPage() {
                   onChange={(e) => setField('contact_info', e.target.value)}
                   placeholder={t.placeholders.contact_info}
                   className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                />
-              </Field>
-              <Field label={t.labels.match_limit} required error={errors.match_limit ? t.errors[errors.match_limit] : ''}>
-                <ChoiceGroup
-                  values={Object.keys(t.options.match_limit)}
-                  selected={form.match_limit}
-                  onChange={(next) => setField('match_limit', next as string)}
-                  labels={t.options.match_limit}
                 />
               </Field>
               <label className="flex items-start gap-2 rounded-xl border border-[#cad7ea] bg-white/65 p-3 text-sm">
@@ -775,7 +879,8 @@ export default function RegistrationPage() {
               <button
                 type="button"
                 onClick={validateAndNext}
-                className="rounded-full bg-gradient-to-r from-[#ff9165] via-[#d76cff] to-[#61d7ff] px-5 py-2 text-sm font-semibold text-white"
+                disabled={!canGoNext || submitState === 'submitting'}
+                className="rounded-full bg-gradient-to-r from-[#ff9165] via-[#d76cff] to-[#61d7ff] px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
               >
                 {t.next}
               </button>
@@ -796,6 +901,35 @@ export default function RegistrationPage() {
         {submitState === 'success' ? <p className="mt-3 text-sm text-[#2a8e5b]">{t.submitSuccess}</p> : null}
         {submitState === 'error' ? <p className="mt-3 text-sm text-[#c54a78]">{t.submitFailed}</p> : null}
       </div>
+      <style jsx global>{`
+        .photo-wall .ant-upload-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+        .photo-wall .ant-upload-list-item-container,
+        .photo-wall .ant-upload.ant-upload-select {
+          width: 120px !important;
+          height: 120px !important;
+          margin: 0 !important;
+          border-radius: 12px;
+        }
+        .photo-wall .ant-upload.ant-upload-select {
+          border: 1px dashed #a8d5e5;
+          background: #e8f0f8;
+        }
+        .photo-wall .ant-upload-list-item {
+          border-radius: 12px;
+          overflow: hidden;
+        }
+        @media (max-width: 768px) {
+          .photo-wall .ant-upload-list-item-container,
+          .photo-wall .ant-upload.ant-upload-select {
+            width: 100px !important;
+            height: 100px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
