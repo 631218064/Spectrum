@@ -95,6 +95,8 @@ function ChoiceGroup({
   multi = false,
   max,
   noWrap = false,
+  containerClassName,
+  buttonClassName,
 }: {
   values: string[];
   selected: string | string[];
@@ -103,10 +105,12 @@ function ChoiceGroup({
   multi?: boolean;
   max?: number;
   noWrap?: boolean;
+  containerClassName?: string;
+  buttonClassName?: string;
 }) {
   const selectedSet = new Set(Array.isArray(selected) ? selected : [selected]);
   return (
-    <div className={cn('flex gap-2', noWrap ? 'flex-nowrap overflow-x-auto pb-1' : 'flex-wrap')}>
+    <div className={cn('flex gap-2', noWrap ? 'flex-nowrap overflow-x-auto pb-1' : 'flex-wrap', containerClassName)}>
       {values.map((value) => {
         const active = selectedSet.has(value);
         return (
@@ -129,9 +133,12 @@ function ChoiceGroup({
             className={cn(
               'rounded-full border px-3 py-1.5 text-sm transition',
               noWrap && 'shrink-0 whitespace-nowrap',
+              'rounded-[24px]',
               active
-                ? 'border-transparent bg-gradient-to-r from-[#ff8a63] via-[#d868ff] to-[#5fd6ff] text-white shadow-[0_6px_18px_rgba(157,92,255,0.25)]'
+                ? 'border-transparent bg-[#6495ED] text-white shadow-[0_6px_18px_rgba(100,149,237,0.28)]'
                 : 'border-[#c8d2e3] bg-white/70 text-[#344057] hover:border-[#9ac6ff]'
+              ,
+              buttonClassName
             )}
           >
             {labels[value] ?? value}
@@ -147,14 +154,16 @@ function Field({
   required,
   error,
   children,
+  fieldKey,
 }: {
   label: string;
   required?: boolean;
   error?: string;
   children: React.ReactNode;
+  fieldKey?: string;
 }) {
   return (
-    <label className="block space-y-1.5">
+    <label id={fieldKey ? `field-${fieldKey}` : undefined} className={cn('block space-y-1.5 rounded-xl', error && 'bg-red-50/60 p-2')}>
       <div className="flex items-center gap-2 text-sm font-semibold text-[#313e55]">
         <span>{label}</span>
       </div>
@@ -163,6 +172,20 @@ function Field({
     </label>
   );
 }
+
+const HOBBY_ICONS: Record<string, string> = {
+  reading_writing: '📚',
+  movies_tv: '🎬',
+  music_instruments: '🎵',
+  games: '🎮',
+  sports_fitness: '🏃',
+  travel_food: '🍜',
+  photography_art: '📷',
+  crafts_baking: '🧁',
+  outdoors_camping: '🏕️',
+  home_relax: '🛋️',
+  custom: '✨',
+};
 
 export default function RegistrationPage() {
   const [lang, setLang] = useState<Language>('zh');
@@ -314,6 +337,56 @@ export default function RegistrationPage() {
     return payload;
   };
 
+  const validateFieldNow = (keys: string[], draftForm?: RegistrationFormData) => {
+    const result = validateRegistrationForm(sanitizePayload(draftForm ?? form));
+    setErrors((prev) => {
+      const next = { ...prev };
+      for (const key of keys) {
+        next[key] = result.errors[key] || '';
+      }
+      return next;
+    });
+  };
+
+  const findFirstErrorKey = (errorMap: Record<string, string>) => {
+    if (errorMap.location_province || errorMap.location_city) return 'location';
+    const ordered = [
+      'photos',
+      'nickname',
+      'birthday',
+      'gender',
+      'sexual_orientation',
+      'location',
+      'mbti',
+      'zodiac',
+      'growth_environment',
+      'financial_status',
+      'education',
+      'pet_preference',
+      'hobbies',
+      'hobbies_custom',
+      'sound_preference',
+      'color_mood',
+      'color_mood_custom',
+      'scent_memory',
+      'scent_memory_custom',
+      'ritual',
+      'ritual_custom',
+      'food_adventure',
+      'conflict_reaction',
+      'recharge_style',
+      'mystery_question',
+      'mystery_answer',
+      'valued_traits',
+      'valued_traits_custom',
+      'relationship_goal',
+      'avatar_filter',
+      'contact_info',
+      'agree_terms',
+    ];
+    return ordered.find((key) => Boolean(errorMap[key]));
+  };
+
   const getStepKeys = (currentStep: number, currentForm: RegistrationFormData): string[] => {
     if (currentStep === 0) {
       return [
@@ -394,6 +467,13 @@ export default function RegistrationPage() {
       const result = validateRegistrationForm(payload);
       if (!result.isValid) {
         setErrors(result.errors);
+        const firstKey = findFirstErrorKey(result.errors);
+        if (firstKey) {
+          const target = document.getElementById(`field-${firstKey}`);
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
         setSubmitState('error');
         return;
       }
@@ -505,24 +585,17 @@ export default function RegistrationPage() {
 
           {step === 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label={t.labels.nickname} required error={errors.nickname ? t.errors[errors.nickname] : ''}>
+              <Field fieldKey="nickname" label={t.labels.nickname} required error={errors.nickname ? t.errors[errors.nickname] : ''}>
                 <input
                   value={form.nickname}
                   onChange={(e) => setField('nickname', e.target.value)}
+                  onBlur={() => validateFieldNow(['nickname'])}
                   maxLength={20}
                   placeholder={t.placeholders.nickname}
                   className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                 />
               </Field>
-              <Field
-                label={t.labels.birthday}
-                required
-                error={
-                  errors.birthday
-                    ? t.errors[errors.birthday]
-                    : ''
-                }
-              >
+              <Field fieldKey="birthday" label={t.labels.birthday} required error={errors.birthday ? t.errors[errors.birthday] : ''}>
                 <DatePicker
                   format="YYYY-MM-DD"
                   value={form.birthday ? dayjs(form.birthday, 'YYYY-MM-DD') : null}
@@ -531,92 +604,117 @@ export default function RegistrationPage() {
                     setField('birthday', nextValue);
                     validateBirthdayNow(nextValue);
                   }}
+                  onBlur={() => validateFieldNow(['birthday'])}
                   style={{ width: '100%', height: 42, borderRadius: 12 }}
                   className="border-[#cad7ea] bg-white outline-none ring-[#97c1ff] focus:ring"
                   allowClear
                 />
               </Field>
 
-              <Field label={t.labels.gender} required error={errors.gender ? t.errors[errors.gender] : ''}>
+              <Field fieldKey="gender" label={t.labels.gender} required error={errors.gender ? t.errors[errors.gender] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.gender)}
                   selected={form.gender}
-                  onChange={(next) => setField('gender', next as string)}
+                  onChange={(next) => {
+                    const nextForm = { ...form, gender: next as string };
+                    setForm(nextForm);
+                    validateFieldNow(['gender'], nextForm);
+                  }}
                   labels={t.options.gender}
+                  containerClassName="grid w-full grid-cols-2 md:grid-cols-4"
+                  buttonClassName="w-full text-center"
                 />
               </Field>
 
-              <Field
-                label={t.labels.sexual_orientation}
-                required
-                error={errors.sexual_orientation ? t.errors[errors.sexual_orientation] : ''}
-              >
+              <Field fieldKey="sexual_orientation" label={t.labels.sexual_orientation} required error={errors.sexual_orientation ? t.errors[errors.sexual_orientation] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.sexual_orientation)}
                   selected={form.sexual_orientation}
-                  onChange={(next) => setField('sexual_orientation', next as string)}
+                  onChange={(next) => {
+                    const nextForm = { ...form, sexual_orientation: next as string };
+                    setForm(nextForm);
+                    validateFieldNow(['sexual_orientation'], nextForm);
+                  }}
                   labels={t.options.sexual_orientation}
                 />
               </Field>
 
-              <Field label={t.labels.location_country} required error={errors.location ? t.errors[errors.location] : ''}>
-                <select
-                  value={form.location.country}
-                  onChange={(e) => {
-                    const code = e.target.value;
-                    setLocation({ country: code, province: '', city: '' });
-                  }}
-                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                >
-                  <option value="">-</option>
-                  {(citiesData?.countries || []).map((item) => (
-                    <option key={item.code} value={item.code}>
-                      {lang === 'zh' ? item.name : item.name_en}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              {form.location.country === 'CN' ? (
-                <>
-                  <Field
-                    label={t.labels.location_province}
-                    required
-                    error={errors.location_province ? t.errors[errors.location_province] : ''}
+              <Field
+                fieldKey="location"
+                label={lang === 'zh' ? '所在地' : 'Location'}
+                required
+                error={
+                  errors.location
+                    ? t.errors[errors.location]
+                    : errors.location_province
+                    ? t.errors[errors.location_province]
+                    : errors.location_city
+                    ? t.errors[errors.location_city]
+                    : ''
+                }
+              >
+                <div className="flex flex-wrap gap-2">
+                  <select
+                    value={form.location.country}
+                    onChange={(e) => {
+                      const code = e.target.value;
+                      setLocation({ country: code, province: '', city: '' });
+                      validateFieldNow(['location', 'location_province', 'location_city']);
+                    }}
+                    onBlur={() => validateFieldNow(['location'])}
+                    className="w-[170px] rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                   >
-                    <select
-                      value={form.location.province || ''}
-                      onChange={(e) => setLocation({ province: e.target.value, city: '' })}
-                      className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                    >
-                      <option value="">-</option>
-                      {provinces.map((item) => (
-                        <option key={item.code} value={item.code}>
-                          {lang === 'zh' ? item.name : item.name_en}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label={t.labels.location_city} required error={errors.location_city ? t.errors[errors.location_city] : ''}>
-                    <select
-                      value={form.location.city || ''}
-                      onChange={(e) => setLocation({ city: e.target.value })}
-                      className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                    >
-                      <option value="">-</option>
-                      {cityOptions.map((item) => (
-                        <option key={item.code} value={item.code}>
-                          {lang === 'zh' ? item.name : item.name_en}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                </>
-              ) : null}
+                    <option value="">-</option>
+                    {(citiesData?.countries || []).map((item) => (
+                      <option key={item.code} value={item.code}>
+                        {lang === 'zh' ? item.name : item.name_en}
+                      </option>
+                    ))}
+                  </select>
+                  {form.location.country === 'CN' ? (
+                    <>
+                      <select
+                        value={form.location.province || ''}
+                        onChange={(e) => {
+                          setLocation({ province: e.target.value, city: '' });
+                          validateFieldNow(['location_province', 'location_city']);
+                        }}
+                        onBlur={() => validateFieldNow(['location_province'])}
+                        className="min-w-[170px] flex-1 rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                      >
+                        <option value="">-</option>
+                        {provinces.map((item) => (
+                          <option key={item.code} value={item.code}>
+                            {lang === 'zh' ? item.name : item.name_en}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={form.location.city || ''}
+                        onChange={(e) => {
+                          setLocation({ city: e.target.value });
+                          validateFieldNow(['location_city']);
+                        }}
+                        onBlur={() => validateFieldNow(['location_city'])}
+                        className="min-w-[170px] flex-1 rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                      >
+                        <option value="">-</option>
+                        {cityOptions.map((item) => (
+                          <option key={item.code} value={item.code}>
+                            {lang === 'zh' ? item.name : item.name_en}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  ) : null}
+                </div>
+              </Field>
 
-              <Field label={t.labels.mbti} required error={errors.mbti ? t.errors[errors.mbti] : ''}>
+              <Field fieldKey="mbti" label={t.labels.mbti} required error={errors.mbti ? t.errors[errors.mbti] : ''}>
                 <select
                   value={form.mbti}
                   onChange={(e) => setField('mbti', e.target.value)}
+                  onBlur={() => validateFieldNow(['mbti'])}
                   className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                 >
                   <option value="">-</option>
@@ -628,10 +726,11 @@ export default function RegistrationPage() {
                 </select>
               </Field>
 
-              <Field label={t.labels.zodiac} required error={errors.zodiac ? t.errors[errors.zodiac] : ''}>
+              <Field fieldKey="zodiac" label={t.labels.zodiac} required error={errors.zodiac ? t.errors[errors.zodiac] : ''}>
                 <select
                   value={form.zodiac}
                   onChange={(e) => setField('zodiac', e.target.value)}
+                  onBlur={() => validateFieldNow(['zodiac'])}
                   className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                 >
                   <option value="">-</option>
@@ -643,59 +742,103 @@ export default function RegistrationPage() {
                 </select>
               </Field>
 
-              <Field label={t.labels.growth_environment} required error={errors.growth_environment ? t.errors[errors.growth_environment] : ''}>
+              <Field fieldKey="growth_environment" label={t.labels.growth_environment} required error={errors.growth_environment ? t.errors[errors.growth_environment] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.growth_environment)}
                   selected={form.growth_environment}
-                  onChange={(next) => setField('growth_environment', next as string)}
+                  onChange={(next) => {
+                    const nextForm = { ...form, growth_environment: next as string };
+                    setForm(nextForm);
+                    validateFieldNow(['growth_environment'], nextForm);
+                  }}
                   labels={t.options.growth_environment}
+                  containerClassName="grid w-full grid-cols-2 md:grid-cols-4"
+                  buttonClassName="w-full text-center"
                 />
               </Field>
 
-              <Field label={t.labels.financial_status} required error={errors.financial_status ? t.errors[errors.financial_status] : ''}>
-                <ChoiceGroup
-                  values={Object.keys(t.options.financial_status)}
-                  selected={form.financial_status}
-                  onChange={(next) => setField('financial_status', next as string)}
-                  labels={t.options.financial_status}
-                />
+              <Field fieldKey="financial_status" label={t.labels.financial_status} required error={errors.financial_status ? t.errors[errors.financial_status] : ''}>
+                <select
+                  value={form.financial_status}
+                  onChange={(e) => setField('financial_status', e.target.value)}
+                  onBlur={() => validateFieldNow(['financial_status'])}
+                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                >
+                  <option value="">-</option>
+                  {Object.keys(t.options.financial_status).map((item) => (
+                    <option key={item} value={item}>
+                      {t.options.financial_status[item]}
+                    </option>
+                  ))}
+                </select>
               </Field>
 
-              <Field label={t.labels.education} required error={errors.education ? t.errors[errors.education] : ''}>
-                <ChoiceGroup
-                  values={Object.keys(t.options.education)}
-                  selected={form.education}
-                  onChange={(next) => setField('education', next as string)}
-                  labels={t.options.education}
-                />
+              <Field fieldKey="education" label={t.labels.education} required error={errors.education ? t.errors[errors.education] : ''}>
+                <select
+                  value={form.education}
+                  onChange={(e) => setField('education', e.target.value)}
+                  onBlur={() => validateFieldNow(['education'])}
+                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                >
+                  <option value="">-</option>
+                  {Object.keys(t.options.education).map((item) => (
+                    <option key={item} value={item}>
+                      {t.options.education[item]}
+                    </option>
+                  ))}
+                </select>
               </Field>
 
-              <Field label={t.labels.pet_preference} required error={errors.pet_preference ? t.errors[errors.pet_preference] : ''}>
+              <Field fieldKey="pet_preference" label={t.labels.pet_preference} required error={errors.pet_preference ? t.errors[errors.pet_preference] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.pet_preference)}
                   selected={form.pet_preference}
-                  onChange={(next) => setField('pet_preference', next as string)}
+                  onChange={(next) => {
+                    const nextForm = { ...form, pet_preference: next as string };
+                    setForm(nextForm);
+                    validateFieldNow(['pet_preference'], nextForm);
+                  }}
                   labels={t.options.pet_preference}
-                  noWrap
                 />
               </Field>
 
-              <div className="space-y-2 md:col-span-2">
+              <div id="field-hobbies" className={cn('space-y-2 rounded-xl md:col-span-2', errors.hobbies && 'bg-red-50/60 p-2')}>
                 <Field label={t.labels.hobbies} required error={errors.hobbies ? t.errors[errors.hobbies] : ''}>
-                  <ChoiceGroup
-                    values={Object.keys(t.options.hobbies)}
-                    selected={form.hobbies}
-                    onChange={(next) => setField('hobbies', next as string[])}
-                    labels={t.options.hobbies}
-                    multi
-                    max={5}
-                  />
+                  <p className="mb-2 text-xs text-[#7E8C9D]">{lang === 'zh' ? '最多选5项，让TA更了解你' : 'Select up to 5 to help your match know you better'}</p>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+                    {Object.keys(t.options.hobbies).map((value) => {
+                      const selected = form.hobbies.includes(value);
+                      const disable = !selected && form.hobbies.length >= 5;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          disabled={disable}
+                          onClick={() => {
+                            const next = selected ? form.hobbies.filter((item) => item !== value) : [...form.hobbies, value];
+                            const nextForm = { ...form, hobbies: next };
+                            setForm(nextForm);
+                            validateFieldNow(['hobbies', 'hobbies_custom'], nextForm);
+                          }}
+                          className={cn(
+                            'flex items-center gap-2 rounded-xl border px-3 py-2 text-left transition',
+                            selected ? 'border-transparent bg-[#6495ED] text-white' : 'border-[#c8d2e3] bg-white/70 text-[#344057]',
+                            disable && 'cursor-not-allowed opacity-45'
+                          )}
+                        >
+                          <span>{HOBBY_ICONS[value] || '•'}</span>
+                          <span className="text-sm">{t.options.hobbies[value]}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </Field>
                 {form.hobbies.includes('custom') ? (
-                  <Field label={t.labels.hobbies_custom} required error={errors.hobbies_custom ? t.errors[errors.hobbies_custom] : ''}>
+                  <Field fieldKey="hobbies_custom" label={t.labels.hobbies_custom} required error={errors.hobbies_custom ? t.errors[errors.hobbies_custom] : ''}>
                     <input
                       value={form.hobbies_custom}
                       onChange={(e) => setField('hobbies_custom', e.target.value)}
+                      onBlur={() => validateFieldNow(['hobbies_custom'])}
                       placeholder={t.placeholders.hobbies_custom}
                       className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                     />
