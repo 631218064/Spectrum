@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import Cascader from 'antd/lib/cascader';
 import DatePicker from 'antd/lib/date-picker';
+import Select from 'antd/lib/select';
 import Upload from 'antd/lib/upload';
 import type { UploadFile, UploadProps } from 'antd/lib/upload/interface';
 import {
@@ -200,13 +202,34 @@ export default function RegistrationPage() {
 
   const t = registrationTranslations[lang];
 
-  const country = useMemo(
-    () => citiesData?.countries.find((item) => item.code === form.location.country),
-    [citiesData, form.location.country]
+  const locationOptions = useMemo(
+    () =>
+      (citiesData?.countries || []).map((country) => {
+        const base = {
+          value: country.code,
+          label: lang === 'zh' ? country.name : country.name_en,
+        };
+        if (country.code !== 'CN') return base;
+        return {
+          ...base,
+          children: country.provinces.map((province) => ({
+            value: province.code,
+            label: lang === 'zh' ? province.name : province.name_en,
+            children: province.cities.map((city) => ({
+              value: city.code,
+              label: lang === 'zh' ? city.name : city.name_en,
+            })),
+          })),
+        };
+      }),
+    [citiesData, lang]
   );
-  const provinces = country?.provinces ?? [];
-  const selectedProvince = provinces.find((item) => item.code === form.location.province);
-  const cityOptions = selectedProvince?.cities ?? [];
+
+  const cascaderLocationValue = useMemo(() => {
+    if (!form.location.country) return [] as string[];
+    if (form.location.country !== 'CN') return [form.location.country];
+    return [form.location.country, form.location.province || '', form.location.city || ''].filter(Boolean);
+  }, [form.location.city, form.location.country, form.location.province]);
 
   useEffect(() => {
     fetch('/cities.json')
@@ -237,7 +260,7 @@ export default function RegistrationPage() {
   }, [form, t.savedDraft]);
 
   useEffect(() => {
-    // 草稿恢复时，将已保存的 URL 映射为 Upload 的 fileList。
+    // 鑽夌鎭㈠鏃讹紝灏嗗凡淇濆瓨鐨?URL 鏄犲皠涓?Upload 鐨?fileList銆?
     if (fileList.length === 0 && form.photos.length > 0) {
       setFileList(
         form.photos.map((url, index) => ({
@@ -252,10 +275,6 @@ export default function RegistrationPage() {
 
   const setField = <K extends keyof RegistrationFormData>(key: K, value: RegistrationFormData[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const setLocation = (patch: Partial<RegistrationFormData['location']>) => {
-    setForm((prev) => ({ ...prev, location: { ...prev.location, ...patch } }));
   };
 
   const validateBirthdayNow = (value: string) => {
@@ -478,7 +497,7 @@ export default function RegistrationPage() {
         return;
       }
 
-      // 当前项目后端尚未切换到新 schema，先输出最终 payload，后续对接新 API。
+      // 褰撳墠椤圭洰鍚庣灏氭湭鍒囨崲鍒版柊 schema锛屽厛杈撳嚭鏈€缁?payload锛屽悗缁鎺ユ柊 API銆?
       // eslint-disable-next-line no-console
       console.log('registration payload', payload);
 
@@ -638,7 +657,6 @@ export default function RegistrationPage() {
                   labels={t.options.sexual_orientation}
                 />
               </Field>
-
               <Field
                 fieldKey="location"
                 label={lang === 'zh' ? '所在地' : 'Location'}
@@ -653,93 +671,59 @@ export default function RegistrationPage() {
                     : ''
                 }
               >
-                <div className="flex flex-wrap gap-2">
-                  <select
-                    value={form.location.country}
-                    onChange={(e) => {
-                      const code = e.target.value;
-                      setLocation({ country: code, province: '', city: '' });
-                      validateFieldNow(['location', 'location_province', 'location_city']);
-                    }}
-                    onBlur={() => validateFieldNow(['location'])}
-                    className="w-[170px] rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                  >
-                    <option value="">-</option>
-                    {(citiesData?.countries || []).map((item) => (
-                      <option key={item.code} value={item.code}>
-                        {lang === 'zh' ? item.name : item.name_en}
-                      </option>
-                    ))}
-                  </select>
-                  {form.location.country === 'CN' ? (
-                    <>
-                      <select
-                        value={form.location.province || ''}
-                        onChange={(e) => {
-                          setLocation({ province: e.target.value, city: '' });
-                          validateFieldNow(['location_province', 'location_city']);
-                        }}
-                        onBlur={() => validateFieldNow(['location_province'])}
-                        className="min-w-[170px] flex-1 rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                      >
-                        <option value="">-</option>
-                        {provinces.map((item) => (
-                          <option key={item.code} value={item.code}>
-                            {lang === 'zh' ? item.name : item.name_en}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        value={form.location.city || ''}
-                        onChange={(e) => {
-                          setLocation({ city: e.target.value });
-                          validateFieldNow(['location_city']);
-                        }}
-                        onBlur={() => validateFieldNow(['location_city'])}
-                        className="min-w-[170px] flex-1 rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                      >
-                        <option value="">-</option>
-                        {cityOptions.map((item) => (
-                          <option key={item.code} value={item.code}>
-                            {lang === 'zh' ? item.name : item.name_en}
-                          </option>
-                        ))}
-                      </select>
-                    </>
-                  ) : null}
-                </div>
+                <Cascader
+                  className="location-cascader w-full"
+                  style={{ width: '100%' }}
+                  options={locationOptions}
+                  value={cascaderLocationValue}
+                  placeholder={lang === 'zh' ? '请选择' : 'Please select'}
+                  onChange={(rawValues) => {
+                    const values = (rawValues as string[]) || [];
+                    const countryCode = values[0] || '';
+                    const nextLocation =
+                      countryCode === 'CN'
+                        ? {
+                            country: countryCode,
+                            province: values[1] || '',
+                            city: values[2] || '',
+                          }
+                        : { country: countryCode };
+                    const nextForm = { ...form, location: nextLocation };
+                    setForm(nextForm);
+                    validateFieldNow(['location', 'location_province', 'location_city'], nextForm);
+                  }}
+                  onBlur={() => validateFieldNow(['location', 'location_province', 'location_city'])}
+                />
               </Field>
 
               <Field fieldKey="mbti" label={t.labels.mbti} required error={errors.mbti ? t.errors[errors.mbti] : ''}>
-                <select
-                  value={form.mbti}
-                  onChange={(e) => setField('mbti', e.target.value)}
+                <Select
+                  className="form-select-ant w-full"
+                  style={{ width: '100%' }}
+                  value={form.mbti || undefined}
+                  placeholder={lang === 'zh' ? '请选择' : 'Please select'}
+                  onChange={(value) => setField('mbti', value)}
                   onBlur={() => validateFieldNow(['mbti'])}
-                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                >
-                  <option value="">-</option>
-                  {MBTI_VALUES.map((item) => (
-                    <option key={item} value={item}>
-                      {item === 'unknown' ? t.options.mbti.unknown : item}
-                    </option>
-                  ))}
-                </select>
+                  options={MBTI_VALUES.map((item) => ({
+                    value: item,
+                    label: item === 'unknown' ? t.options.mbti.unknown : item,
+                  }))}
+                />
               </Field>
 
               <Field fieldKey="zodiac" label={t.labels.zodiac} required error={errors.zodiac ? t.errors[errors.zodiac] : ''}>
-                <select
-                  value={form.zodiac}
-                  onChange={(e) => setField('zodiac', e.target.value)}
+                <Select
+                  className="form-select-ant w-full"
+                  style={{ width: '100%' }}
+                  value={form.zodiac || undefined}
+                  placeholder={lang === 'zh' ? '请选择' : 'Please select'}
+                  onChange={(value) => setField('zodiac', value)}
                   onBlur={() => validateFieldNow(['zodiac'])}
-                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                >
-                  <option value="">-</option>
-                  {ZODIAC_VALUES.map((item) => (
-                    <option key={item} value={item}>
-                      {t.options.zodiac[item]}
-                    </option>
-                  ))}
-                </select>
+                  options={ZODIAC_VALUES.map((item) => ({
+                    value: item,
+                    label: t.options.zodiac[item],
+                  }))}
+                />
               </Field>
 
               <Field fieldKey="growth_environment" label={t.labels.growth_environment} required error={errors.growth_environment ? t.errors[errors.growth_environment] : ''}>
@@ -758,49 +742,50 @@ export default function RegistrationPage() {
               </Field>
 
               <Field fieldKey="financial_status" label={t.labels.financial_status} required error={errors.financial_status ? t.errors[errors.financial_status] : ''}>
-                <select
-                  value={form.financial_status}
-                  onChange={(e) => setField('financial_status', e.target.value)}
+                <Select
+                  className="form-select-ant w-full"
+                  style={{ width: '100%' }}
+                  value={form.financial_status || undefined}
+                  placeholder={lang === 'zh' ? '请选择' : 'Please select'}
+                  onChange={(value) => setField('financial_status', value)}
                   onBlur={() => validateFieldNow(['financial_status'])}
-                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                >
-                  <option value="">-</option>
-                  {Object.keys(t.options.financial_status).map((item) => (
-                    <option key={item} value={item}>
-                      {t.options.financial_status[item]}
-                    </option>
-                  ))}
-                </select>
+                  options={Object.keys(t.options.financial_status).map((item) => ({
+                    value: item,
+                    label: t.options.financial_status[item],
+                  }))}
+                />
               </Field>
 
               <Field fieldKey="education" label={t.labels.education} required error={errors.education ? t.errors[errors.education] : ''}>
-                <select
-                  value={form.education}
-                  onChange={(e) => setField('education', e.target.value)}
+                <Select
+                  className="form-select-ant w-full"
+                  style={{ width: '100%' }}
+                  value={form.education || undefined}
+                  placeholder={lang === 'zh' ? '请选择' : 'Please select'}
+                  onChange={(value) => setField('education', value)}
                   onBlur={() => validateFieldNow(['education'])}
-                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                >
-                  <option value="">-</option>
-                  {Object.keys(t.options.education).map((item) => (
-                    <option key={item} value={item}>
-                      {t.options.education[item]}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-              <Field fieldKey="pet_preference" label={t.labels.pet_preference} required error={errors.pet_preference ? t.errors[errors.pet_preference] : ''}>
-                <ChoiceGroup
-                  values={Object.keys(t.options.pet_preference)}
-                  selected={form.pet_preference}
-                  onChange={(next) => {
-                    const nextForm = { ...form, pet_preference: next as string };
-                    setForm(nextForm);
-                    validateFieldNow(['pet_preference'], nextForm);
-                  }}
-                  labels={t.options.pet_preference}
+                  options={Object.keys(t.options.education).map((item) => ({
+                    value: item,
+                    label: t.options.education[item],
+                  }))}
                 />
               </Field>
+
+              <div className="md:col-span-2">
+                <Field fieldKey="pet_preference" label={t.labels.pet_preference} required error={errors.pet_preference ? t.errors[errors.pet_preference] : ''}>
+                  <ChoiceGroup
+                    values={Object.keys(t.options.pet_preference)}
+                    selected={form.pet_preference}
+                    onChange={(next) => {
+                      const nextForm = { ...form, pet_preference: next as string };
+                      setForm(nextForm);
+                      validateFieldNow(['pet_preference'], nextForm);
+                    }}
+                    labels={t.options.pet_preference}
+                    noWrap
+                  />
+                </Field>
+              </div>
 
               <div id="field-hobbies" className={cn('space-y-2 rounded-xl md:col-span-2', errors.hobbies && 'bg-red-50/60 p-2')}>
                 <Field label={t.labels.hobbies} required error={errors.hobbies ? t.errors[errors.hobbies] : ''}>
@@ -1126,6 +1111,35 @@ export default function RegistrationPage() {
           object-fit: cover !important;
           display: block !important;
         }
+        .location-cascader .ant-select-selector {
+          height: 42px !important;
+          border-radius: 12px !important;
+          border-color: #cad7ea !important;
+          background: #fff !important;
+          padding: 0 12px !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+        .location-cascader .ant-select-selection-placeholder,
+        .location-cascader .ant-select-selection-item {
+          line-height: 40px !important;
+        }
+        .form-select-ant .ant-select-selector {
+          height: 42px !important;
+          border-radius: 12px !important;
+          border-color: #cad7ea !important;
+          background: #fff !important;
+          padding: 0 12px !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+        .form-select-ant .ant-select-selection-placeholder,
+        .form-select-ant .ant-select-selection-item {
+          line-height: 40px !important;
+        }
+        .form-select-ant .ant-select-selection-search-input {
+          height: 40px !important;
+        }
         @media (max-width: 768px) {
           .photo-wall .ant-upload-list-item-container,
           .photo-wall .ant-upload.ant-upload-select {
@@ -1142,3 +1156,4 @@ export default function RegistrationPage() {
     </div>
   );
 }
+
