@@ -1,9 +1,10 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import Cascader from 'antd/lib/cascader';
 import DatePicker from 'antd/lib/date-picker';
+import Input from 'antd/lib/input';
 import Select from 'antd/lib/select';
 import Upload from 'antd/lib/upload';
 import type { UploadFile, UploadProps } from 'antd/lib/upload/interface';
@@ -199,6 +200,7 @@ export default function RegistrationPage() {
   const [draggingUid, setDraggingUid] = useState<string | null>(null);
   const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [tip, setTip] = useState('');
+  const latestBirthdayRef = useRef(form.birthday);
 
   const t = registrationTranslations[lang];
 
@@ -258,6 +260,10 @@ export default function RegistrationPage() {
     const timer = setTimeout(() => setTip(''), 1200);
     return () => clearTimeout(timer);
   }, [form, t.savedDraft]);
+
+  useEffect(() => {
+    latestBirthdayRef.current = form.birthday;
+  }, [form.birthday]);
 
   useEffect(() => {
     // 鑽夌鎭㈠鏃讹紝灏嗗凡淇濆瓨鐨?URL 鏄犲皠涓?Upload 鐨?fileList銆?
@@ -605,13 +611,14 @@ export default function RegistrationPage() {
           {step === 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
               <Field fieldKey="nickname" label={t.labels.nickname} required error={errors.nickname ? t.errors[errors.nickname] : ''}>
-                <input
+                <Input
+                  className="form-input-ant w-full"
+                  style={{ width: '100%' }}
                   value={form.nickname}
                   onChange={(e) => setField('nickname', e.target.value)}
                   onBlur={() => validateFieldNow(['nickname'])}
                   maxLength={20}
-                  placeholder={t.placeholders.nickname}
-                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
+                  placeholder={lang === 'zh' ? '请输入' : 'Please input'}
                 />
               </Field>
               <Field fieldKey="birthday" label={t.labels.birthday} required error={errors.birthday ? t.errors[errors.birthday] : ''}>
@@ -619,12 +626,13 @@ export default function RegistrationPage() {
                   format="YYYY-MM-DD"
                   value={form.birthday ? dayjs(form.birthday, 'YYYY-MM-DD') : null}
                   placeholder={lang === 'zh' ? '请选择' : 'Please select'}
-                  onChange={(_, dateString) => {
-                    const nextValue = typeof dateString === 'string' ? dateString : '';
+                  onChange={(value) => {
+                    const nextValue = value ? value.format('YYYY-MM-DD') : '';
+                    latestBirthdayRef.current = nextValue;
                     setField('birthday', nextValue);
                     validateBirthdayNow(nextValue);
                   }}
-                  onBlur={() => validateFieldNow(['birthday'])}
+                  onBlur={() => validateBirthdayNow(latestBirthdayRef.current)}
                   style={{ width: '100%', height: 42, borderRadius: 12 }}
                   className="border-[#cad7ea] bg-white outline-none ring-[#97c1ff] focus:ring"
                   allowClear
@@ -1141,6 +1149,13 @@ export default function RegistrationPage() {
         .form-select-ant .ant-select-selection-search-input {
           height: 40px !important;
         }
+        .form-input-ant.ant-input {
+          height: 42px !important;
+          border-radius: 12px !important;
+          border-color: #cad7ea !important;
+          background: #fff !important;
+          padding: 0 12px !important;
+        }
         @media (max-width: 768px) {
           .photo-wall .ant-upload-list-item-container,
           .photo-wall .ant-upload.ant-upload-select {
@@ -1157,4 +1172,7 @@ export default function RegistrationPage() {
     </div>
   );
 }
+
+
+
 

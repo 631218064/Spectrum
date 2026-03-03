@@ -125,29 +125,31 @@ function getBeijingNow(): Date {
   return new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
 }
 
-function parseIsoDate(input: string): Date | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input)) return null;
-  const value = new Date(`${input}T00:00:00+08:00`);
-  return Number.isNaN(value.getTime()) ? null : value;
+function parseIsoDateParts(input: string): { year: number; month: number; day: number } | null {
+  const match = input.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return null;
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return { year, month, day };
 }
 
 export function isPastDateInBeijing(input: string): boolean {
-  const date = parseIsoDate(input);
-  if (!date) return false;
+  if (!parseIsoDateParts(input)) return false;
   const todayBj = getBeijingNow();
   const todayStr = `${todayBj.getFullYear()}-${String(todayBj.getMonth() + 1).padStart(2, '0')}-${String(todayBj.getDate()).padStart(2, '0')}`;
-  const todayDate = parseIsoDate(todayStr);
-  if (!todayDate) return false;
-  return date.getTime() < todayDate.getTime();
+  return input < todayStr;
 }
 
 export function getAgeInBeijing(input: string): number | null {
-  const birth = parseIsoDate(input);
+  const birth = parseIsoDateParts(input);
   if (!birth) return null;
   const now = getBeijingNow();
-  let age = now.getFullYear() - birth.getUTCFullYear();
-  const monthDiff = now.getMonth() - birth.getUTCMonth();
-  const dayDiff = now.getDate() - birth.getUTCDate();
+  let age = now.getFullYear() - birth.year;
+  const monthDiff = now.getMonth() + 1 - birth.month;
+  const dayDiff = now.getDate() - birth.day;
   if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
     age -= 1;
   }
@@ -212,9 +214,7 @@ export function validateRegistrationForm(input: RegistrationFormData): Validatio
 
   if (!isPastDateInBeijing(data.birthday)) {
     errors.birthday = 'past_date';
-  }
-
-  if (!isAdultInBeijing(data.birthday)) {
+  } else if (!isAdultInBeijing(data.birthday)) {
     errors.birthday = 'adult_only';
   }
 

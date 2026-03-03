@@ -182,7 +182,6 @@
     "https://your-project.supabase.co/storage/v1/object/public/profiles/xxx_1.jpg",
     "https://your-project.supabase.co/storage/v1/object/public/profiles/xxx_2.jpg"
   ],
-  "avatar_filter": "blur",
   "contact_info": "wechat_abc123",
   "agree_terms": true
 }，
