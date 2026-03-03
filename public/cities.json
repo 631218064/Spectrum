@@ -10,16 +10,565 @@
           "name": "北京市",
           "name_en": "Beijing",
           "cities": [
-            { "code": "BJ001", "name": "北京市", "name_en": "Beijing" }
+            {
+              "code": "DC",
+              "name": "东城区",
+              "name_en": "Dongcheng"
+            },
+            {
+              "code": "XC",
+              "name": "西城区",
+              "name_en": "Xicheng"
+            },
+            {
+              "code": "CY",
+              "name": "朝阳区",
+              "name_en": "Chaoyang"
+            },
+            {
+              "code": "FT",
+              "name": "丰台区",
+              "name_en": "Fengtai"
+            },
+            {
+              "code": "SJS",
+              "name": "石景山区",
+              "name_en": "Shijingshan"
+            },
+            {
+              "code": "HD",
+              "name": "海淀区",
+              "name_en": "Haidian"
+            },
+            {
+              "code": "MTG",
+              "name": "门头沟区",
+              "name_en": "Mentougou"
+            },
+            {
+              "code": "FS",
+              "name": "房山区",
+              "name_en": "Fangshan"
+            },
+            {
+              "code": "TZ",
+              "name": "通州区",
+              "name_en": "Tongzhou"
+            },
+            {
+              "code": "SY",
+              "name": "顺义区",
+              "name_en": "Shunyi"
+            },
+            {
+              "code": "CP",
+              "name": "昌平区",
+              "name_en": "Changping"
+            },
+            {
+              "code": "DX",
+              "name": "大兴区",
+              "name_en": "Daxing"
+            },
+            {
+              "code": "HR",
+              "name": "怀柔区",
+              "name_en": "Huairou"
+            },
+            {
+              "code": "PG",
+              "name": "平谷区",
+              "name_en": "Pinggu"
+            },
+            {
+              "code": "MY",
+              "name": "密云区",
+              "name_en": "Miyun"
+            },
+            {
+              "code": "YQ",
+              "name": "延庆区",
+              "name_en": "Yanqing"
+            }
           ]
         },
         {
-          "code": "GD",
-          "name": "广东省",
-          "name_en": "Guangdong",
+          "code": "TJ",
+          "name": "天津市",
+          "name_en": "Tianjin",
           "cities": [
-            { "code": "GZ", "name": "广州市", "name_en": "Guangzhou" },
-            { "code": "SZ", "name": "深圳市", "name_en": "Shenzhen" }
+            {
+              "code": "HP",
+              "name": "和平区",
+              "name_en": "Heping"
+            },
+            {
+              "code": "HD",
+              "name": "河东区",
+              "name_en": "Hedong"
+            },
+            {
+              "code": "HX",
+              "name": "河西区",
+              "name_en": "Hexi"
+            },
+            {
+              "code": "NK",
+              "name": "南开区",
+              "name_en": "Nankai"
+            },
+            {
+              "code": "HB",
+              "name": "河北区",
+              "name_en": "Hebei"
+            },
+            {
+              "code": "HQ",
+              "name": "红桥区",
+              "name_en": "Hongqiao"
+            },
+            {
+              "code": "DL",
+              "name": "东丽区",
+              "name_en": "Dongli"
+            },
+            {
+              "code": "XQ",
+              "name": "西青区",
+              "name_en": "Xiqing"
+            },
+            {
+              "code": "JN",
+              "name": "津南区",
+              "name_en": "Jinnan"
+            },
+            {
+              "code": "BC",
+              "name": "北辰区",
+              "name_en": "Beichen"
+            },
+            {
+              "code": "WQ",
+              "name": "武清区",
+              "name_en": "Wuqing"
+            },
+            {
+              "code": "BA",
+              "name": "宝坻区",
+              "name_en": "Bao"
+            },
+            {
+              "code": "BHX",
+              "name": "滨海新区",
+              "name_en": "Binhaixin"
+            },
+            {
+              "code": "NH",
+              "name": "宁河区",
+              "name_en": "Ninghe"
+            },
+            {
+              "code": "JH",
+              "name": "静海区",
+              "name_en": "Jinghai"
+            },
+            {
+              "code": "JZ",
+              "name": "蓟州区",
+              "name_en": "Jizhou"
+            }
+          ]
+        },
+        {
+          "code": "HE",
+          "name": "河北省",
+          "name_en": "Hebei",
+          "cities": [
+            {
+              "code": "SJZ",
+              "name": "石家庄市",
+              "name_en": "Shijiazhuang"
+            },
+            {
+              "code": "TS",
+              "name": "唐山市",
+              "name_en": "Tangshan"
+            },
+            {
+              "code": "QHD",
+              "name": "秦皇岛市",
+              "name_en": "Qinhuangdao"
+            },
+            {
+              "code": "HD",
+              "name": "邯郸市",
+              "name_en": "Handan"
+            },
+            {
+              "code": "XT",
+              "name": "邢台市",
+              "name_en": "Xingtai"
+            },
+            {
+              "code": "BD",
+              "name": "保定市",
+              "name_en": "Baoding"
+            },
+            {
+              "code": "ZJK",
+              "name": "张家口市",
+              "name_en": "Zhangjiakou"
+            },
+            {
+              "code": "CD",
+              "name": "承德市",
+              "name_en": "Chengde"
+            },
+            {
+              "code": "CZ",
+              "name": "沧州市",
+              "name_en": "Cangzhou"
+            },
+            {
+              "code": "LF",
+              "name": "廊坊市",
+              "name_en": "Langfang"
+            },
+            {
+              "code": "HS",
+              "name": "衡水市",
+              "name_en": "Hengshui"
+            }
+          ]
+        },
+        {
+          "code": "SX",
+          "name": "山西省",
+          "name_en": "Shanxi",
+          "cities": [
+            {
+              "code": "TY",
+              "name": "太原市",
+              "name_en": "Taiyuan"
+            },
+            {
+              "code": "DT",
+              "name": "大同市",
+              "name_en": "Datong"
+            },
+            {
+              "code": "YQ",
+              "name": "阳泉市",
+              "name_en": "Yangquan"
+            },
+            {
+              "code": "ZZ",
+              "name": "长治市",
+              "name_en": "Zhangzhi"
+            },
+            {
+              "code": "JC",
+              "name": "晋城市",
+              "name_en": "Jincheng"
+            },
+            {
+              "code": "SZ",
+              "name": "朔州市",
+              "name_en": "Shuozhou"
+            },
+            {
+              "code": "JZ",
+              "name": "晋中市",
+              "name_en": "Jinzhong"
+            },
+            {
+              "code": "YC",
+              "name": "运城市",
+              "name_en": "Yuncheng"
+            },
+            {
+              "code": "XZ",
+              "name": "忻州市",
+              "name_en": "Xinzhou"
+            },
+            {
+              "code": "LF",
+              "name": "临汾市",
+              "name_en": "Linfen"
+            },
+            {
+              "code": "LL",
+              "name": "吕梁市",
+              "name_en": "Lvliang"
+            }
+          ]
+        },
+        {
+          "code": "NMG",
+          "name": "内蒙古自治区",
+          "name_en": "Neimenggu",
+          "cities": [
+            {
+              "code": "HHHT",
+              "name": "呼和浩特市",
+              "name_en": "Huhehaote"
+            },
+            {
+              "code": "BT",
+              "name": "包头市",
+              "name_en": "Baotou"
+            },
+            {
+              "code": "WH",
+              "name": "乌海市",
+              "name_en": "Wuhai"
+            },
+            {
+              "code": "CF",
+              "name": "赤峰市",
+              "name_en": "Chifeng"
+            },
+            {
+              "code": "TL",
+              "name": "通辽市",
+              "name_en": "Tongliao"
+            },
+            {
+              "code": "EEDS",
+              "name": "鄂尔多斯市",
+              "name_en": "Eerduosi"
+            },
+            {
+              "code": "HLBE",
+              "name": "呼伦贝尔市",
+              "name_en": "Hulunbeier"
+            },
+            {
+              "code": "BYNE",
+              "name": "巴彦淖尔市",
+              "name_en": "Bayannaoer"
+            },
+            {
+              "code": "WLCB",
+              "name": "乌兰察布市",
+              "name_en": "Wulanchabu"
+            },
+            {
+              "code": "XA",
+              "name": "兴安盟",
+              "name_en": "Xingan"
+            },
+            {
+              "code": "XLGL",
+              "name": "锡林郭勒盟",
+              "name_en": "Xilinguolei"
+            },
+            {
+              "code": "ALS",
+              "name": "阿拉善盟",
+              "name_en": "Alashan"
+            }
+          ]
+        },
+        {
+          "code": "LN",
+          "name": "辽宁省",
+          "name_en": "Liaoning",
+          "cities": [
+            {
+              "code": "SY",
+              "name": "沈阳市",
+              "name_en": "Shenyang"
+            },
+            {
+              "code": "DL",
+              "name": "大连市",
+              "name_en": "Dalian"
+            },
+            {
+              "code": "AS",
+              "name": "鞍山市",
+              "name_en": "Anshan"
+            },
+            {
+              "code": "FS",
+              "name": "抚顺市",
+              "name_en": "Fushun"
+            },
+            {
+              "code": "BX",
+              "name": "本溪市",
+              "name_en": "Benxi"
+            },
+            {
+              "code": "DD",
+              "name": "丹东市",
+              "name_en": "Dandong"
+            },
+            {
+              "code": "JZ",
+              "name": "锦州市",
+              "name_en": "Jinzhou"
+            },
+            {
+              "code": "YK",
+              "name": "营口市",
+              "name_en": "Yingkou"
+            },
+            {
+              "code": "FX",
+              "name": "阜新市",
+              "name_en": "Fuxin"
+            },
+            {
+              "code": "LY",
+              "name": "辽阳市",
+              "name_en": "Liaoyang"
+            },
+            {
+              "code": "PJ",
+              "name": "盘锦市",
+              "name_en": "Panjin"
+            },
+            {
+              "code": "TL",
+              "name": "铁岭市",
+              "name_en": "Tieling"
+            },
+            {
+              "code": "ZY",
+              "name": "朝阳市",
+              "name_en": "Zhaoyang"
+            },
+            {
+              "code": "HLD",
+              "name": "葫芦岛市",
+              "name_en": "Huludao"
+            }
+          ]
+        },
+        {
+          "code": "JL",
+          "name": "吉林省",
+          "name_en": "Jilin",
+          "cities": [
+            {
+              "code": "CC",
+              "name": "长春市",
+              "name_en": "Changchun"
+            },
+            {
+              "code": "JL",
+              "name": "吉林市",
+              "name_en": "Jilin"
+            },
+            {
+              "code": "SP",
+              "name": "四平市",
+              "name_en": "Siping"
+            },
+            {
+              "code": "LY",
+              "name": "辽源市",
+              "name_en": "Liaoyuan"
+            },
+            {
+              "code": "TH",
+              "name": "通化市",
+              "name_en": "Tonghua"
+            },
+            {
+              "code": "BS",
+              "name": "白山市",
+              "name_en": "Baishan"
+            },
+            {
+              "code": "SY",
+              "name": "松原市",
+              "name_en": "Songyuan"
+            },
+            {
+              "code": "BC",
+              "name": "白城市",
+              "name_en": "Baicheng"
+            },
+            {
+              "code": "YBCX",
+              "name": "延边朝鲜族自治州",
+              "name_en": "Yanbianchaoxianzu"
+            }
+          ]
+        },
+        {
+          "code": "HL",
+          "name": "黑龙江省",
+          "name_en": "Heilongjiang",
+          "cities": [
+            {
+              "code": "HEB",
+              "name": "哈尔滨市",
+              "name_en": "Haerbin"
+            },
+            {
+              "code": "QQHE",
+              "name": "齐齐哈尔市",
+              "name_en": "Qiqihaer"
+            },
+            {
+              "code": "JX",
+              "name": "鸡西市",
+              "name_en": "Jixi"
+            },
+            {
+              "code": "HG",
+              "name": "鹤岗市",
+              "name_en": "Hegang"
+            },
+            {
+              "code": "SYS",
+              "name": "双鸭山市",
+              "name_en": "Shuangyashan"
+            },
+            {
+              "code": "DQ",
+              "name": "大庆市",
+              "name_en": "Daqing"
+            },
+            {
+              "code": "YC",
+              "name": "伊春市",
+              "name_en": "Yichun"
+            },
+            {
+              "code": "JMS",
+              "name": "佳木斯市",
+              "name_en": "Jiamusi"
+            },
+            {
+              "code": "QTH",
+              "name": "七台河市",
+              "name_en": "Qitaihe"
+            },
+            {
+              "code": "MDJ",
+              "name": "牡丹江市",
+              "name_en": "Mudanjiang"
+            },
+            {
+              "code": "HH",
+              "name": "黑河市",
+              "name_en": "Heihe"
+            },
+            {
+              "code": "SH",
+              "name": "绥化市",
+              "name_en": "Suihua"
+            },
+            {
+              "code": "DXAL",
+              "name": "大兴安岭地区",
+              "name_en": "Daxinganling"
+            }
           ]
         },
         {
@@ -27,7 +576,1905 @@
           "name": "上海市",
           "name_en": "Shanghai",
           "cities": [
-            { "code": "SH001", "name": "上海市", "name_en": "Shanghai" }
+            {
+              "code": "HP",
+              "name": "黄浦区",
+              "name_en": "Huangpu"
+            },
+            {
+              "code": "XH",
+              "name": "徐汇区",
+              "name_en": "Xuhui"
+            },
+            {
+              "code": "ZN",
+              "name": "长宁区",
+              "name_en": "Zhangning"
+            },
+            {
+              "code": "JA",
+              "name": "静安区",
+              "name_en": "Jingan"
+            },
+            {
+              "code": "PT",
+              "name": "普陀区",
+              "name_en": "Putuo"
+            },
+            {
+              "code": "HK",
+              "name": "虹口区",
+              "name_en": "Hongkou"
+            },
+            {
+              "code": "YP",
+              "name": "杨浦区",
+              "name_en": "Yangpu"
+            },
+            {
+              "code": "MX",
+              "name": "闵行区",
+              "name_en": "Minxing"
+            },
+            {
+              "code": "BS",
+              "name": "宝山区",
+              "name_en": "Baoshan"
+            },
+            {
+              "code": "JD",
+              "name": "嘉定区",
+              "name_en": "Jiading"
+            },
+            {
+              "code": "PDX",
+              "name": "浦东新区",
+              "name_en": "Pudongxin"
+            },
+            {
+              "code": "JS",
+              "name": "金山区",
+              "name_en": "Jinshan"
+            },
+            {
+              "code": "SJ",
+              "name": "松江区",
+              "name_en": "Songjiang"
+            },
+            {
+              "code": "QP",
+              "name": "青浦区",
+              "name_en": "Qingpu"
+            },
+            {
+              "code": "FE",
+              "name": "奉贤区",
+              "name_en": "Feng"
+            },
+            {
+              "code": "CM",
+              "name": "崇明区",
+              "name_en": "Chongming"
+            }
+          ]
+        },
+        {
+          "code": "JS",
+          "name": "江苏省",
+          "name_en": "Jiangsu",
+          "cities": [
+            {
+              "code": "NJ",
+              "name": "南京市",
+              "name_en": "Nanjing"
+            },
+            {
+              "code": "WX",
+              "name": "无锡市",
+              "name_en": "Wuxi"
+            },
+            {
+              "code": "XZ",
+              "name": "徐州市",
+              "name_en": "Xuzhou"
+            },
+            {
+              "code": "CZ",
+              "name": "常州市",
+              "name_en": "Changzhou"
+            },
+            {
+              "code": "SZ",
+              "name": "苏州市",
+              "name_en": "Suzhou"
+            },
+            {
+              "code": "NT",
+              "name": "南通市",
+              "name_en": "Nantong"
+            },
+            {
+              "code": "LYG",
+              "name": "连云港市",
+              "name_en": "Lianyungang"
+            },
+            {
+              "code": "HA",
+              "name": "淮安市",
+              "name_en": "Huaian"
+            },
+            {
+              "code": "YC",
+              "name": "盐城市",
+              "name_en": "Yancheng"
+            },
+            {
+              "code": "YZ",
+              "name": "扬州市",
+              "name_en": "Yangzhou"
+            },
+            {
+              "code": "ZJ",
+              "name": "镇江市",
+              "name_en": "Zhenjiang"
+            },
+            {
+              "code": "TZ",
+              "name": "泰州市",
+              "name_en": "Taizhou"
+            },
+            {
+              "code": "SQ",
+              "name": "宿迁市",
+              "name_en": "Suqian"
+            }
+          ]
+        },
+        {
+          "code": "ZJ",
+          "name": "浙江省",
+          "name_en": "Zhejiang",
+          "cities": [
+            {
+              "code": "HZ",
+              "name": "杭州市",
+              "name_en": "Hangzhou"
+            },
+            {
+              "code": "NB",
+              "name": "宁波市",
+              "name_en": "Ningbo"
+            },
+            {
+              "code": "WZ",
+              "name": "温州市",
+              "name_en": "Wenzhou"
+            },
+            {
+              "code": "JX",
+              "name": "嘉兴市",
+              "name_en": "Jiaxing"
+            },
+            {
+              "code": "HZ2",
+              "name": "湖州市",
+              "name_en": "Huzhou"
+            },
+            {
+              "code": "SX",
+              "name": "绍兴市",
+              "name_en": "Shaoxing"
+            },
+            {
+              "code": "JH",
+              "name": "金华市",
+              "name_en": "Jinhua"
+            },
+            {
+              "code": "QZ",
+              "name": "衢州市",
+              "name_en": "Quzhou"
+            },
+            {
+              "code": "ZS",
+              "name": "舟山市",
+              "name_en": "Zhoushan"
+            },
+            {
+              "code": "TZ",
+              "name": "台州市",
+              "name_en": "Taizhou"
+            },
+            {
+              "code": "LS",
+              "name": "丽水市",
+              "name_en": "Lishui"
+            }
+          ]
+        },
+        {
+          "code": "AH",
+          "name": "安徽省",
+          "name_en": "Anhui",
+          "cities": [
+            {
+              "code": "HF",
+              "name": "合肥市",
+              "name_en": "Hefei"
+            },
+            {
+              "code": "WH",
+              "name": "芜湖市",
+              "name_en": "Wuhu"
+            },
+            {
+              "code": "BB",
+              "name": "蚌埠市",
+              "name_en": "Bengbu"
+            },
+            {
+              "code": "HN",
+              "name": "淮南市",
+              "name_en": "Huainan"
+            },
+            {
+              "code": "MAS",
+              "name": "马鞍山市",
+              "name_en": "Maanshan"
+            },
+            {
+              "code": "HB",
+              "name": "淮北市",
+              "name_en": "Huaibei"
+            },
+            {
+              "code": "TL",
+              "name": "铜陵市",
+              "name_en": "Tongling"
+            },
+            {
+              "code": "AQ",
+              "name": "安庆市",
+              "name_en": "Anqing"
+            },
+            {
+              "code": "HS",
+              "name": "黄山市",
+              "name_en": "Huangshan"
+            },
+            {
+              "code": "CZ",
+              "name": "滁州市",
+              "name_en": "Chuzhou"
+            },
+            {
+              "code": "FY",
+              "name": "阜阳市",
+              "name_en": "Fuyang"
+            },
+            {
+              "code": "SZ",
+              "name": "宿州市",
+              "name_en": "Suzhou"
+            },
+            {
+              "code": "LA",
+              "name": "六安市",
+              "name_en": "Luan"
+            },
+            {
+              "code": "BZ",
+              "name": "亳州市",
+              "name_en": "Bozhou"
+            },
+            {
+              "code": "CZ2",
+              "name": "池州市",
+              "name_en": "Chizhou"
+            },
+            {
+              "code": "XC",
+              "name": "宣城市",
+              "name_en": "Xuancheng"
+            }
+          ]
+        },
+        {
+          "code": "FJ",
+          "name": "福建省",
+          "name_en": "Fujian",
+          "cities": [
+            {
+              "code": "FZ",
+              "name": "福州市",
+              "name_en": "Fuzhou"
+            },
+            {
+              "code": "XM",
+              "name": "厦门市",
+              "name_en": "Xiamen"
+            },
+            {
+              "code": "PT",
+              "name": "莆田市",
+              "name_en": "Putian"
+            },
+            {
+              "code": "SM",
+              "name": "三明市",
+              "name_en": "Sanming"
+            },
+            {
+              "code": "QZ",
+              "name": "泉州市",
+              "name_en": "Quanzhou"
+            },
+            {
+              "code": "ZZ",
+              "name": "漳州市",
+              "name_en": "Zhangzhou"
+            },
+            {
+              "code": "NP",
+              "name": "南平市",
+              "name_en": "Nanping"
+            },
+            {
+              "code": "LY",
+              "name": "龙岩市",
+              "name_en": "Longyan"
+            },
+            {
+              "code": "ND",
+              "name": "宁德市",
+              "name_en": "Ningde"
+            }
+          ]
+        },
+        {
+          "code": "JX",
+          "name": "江西省",
+          "name_en": "Jiangxi",
+          "cities": [
+            {
+              "code": "NC",
+              "name": "南昌市",
+              "name_en": "Nanchang"
+            },
+            {
+              "code": "JDZ",
+              "name": "景德镇市",
+              "name_en": "Jingdezhen"
+            },
+            {
+              "code": "PX",
+              "name": "萍乡市",
+              "name_en": "Pingxiang"
+            },
+            {
+              "code": "JJ",
+              "name": "九江市",
+              "name_en": "Jiujiang"
+            },
+            {
+              "code": "XY",
+              "name": "新余市",
+              "name_en": "Xinyu"
+            },
+            {
+              "code": "YT",
+              "name": "鹰潭市",
+              "name_en": "Yingtan"
+            },
+            {
+              "code": "GZ",
+              "name": "赣州市",
+              "name_en": "Ganzhou"
+            },
+            {
+              "code": "JA",
+              "name": "吉安市",
+              "name_en": "Jian"
+            },
+            {
+              "code": "YC",
+              "name": "宜春市",
+              "name_en": "Yichun"
+            },
+            {
+              "code": "FZ",
+              "name": "抚州市",
+              "name_en": "Fuzhou"
+            },
+            {
+              "code": "SR",
+              "name": "上饶市",
+              "name_en": "Shangrao"
+            }
+          ]
+        },
+        {
+          "code": "SD",
+          "name": "山东省",
+          "name_en": "Shandong",
+          "cities": [
+            {
+              "code": "JN",
+              "name": "济南市",
+              "name_en": "Jinan"
+            },
+            {
+              "code": "QD",
+              "name": "青岛市",
+              "name_en": "Qingdao"
+            },
+            {
+              "code": "ZB",
+              "name": "淄博市",
+              "name_en": "Zibo"
+            },
+            {
+              "code": "ZZ",
+              "name": "枣庄市",
+              "name_en": "Zaozhuang"
+            },
+            {
+              "code": "DY",
+              "name": "东营市",
+              "name_en": "Dongying"
+            },
+            {
+              "code": "YT",
+              "name": "烟台市",
+              "name_en": "Yantai"
+            },
+            {
+              "code": "WF",
+              "name": "潍坊市",
+              "name_en": "Weifang"
+            },
+            {
+              "code": "JN2",
+              "name": "济宁市",
+              "name_en": "Jining"
+            },
+            {
+              "code": "TA",
+              "name": "泰安市",
+              "name_en": "Taian"
+            },
+            {
+              "code": "WH",
+              "name": "威海市",
+              "name_en": "Weihai"
+            },
+            {
+              "code": "RZ",
+              "name": "日照市",
+              "name_en": "Rizhao"
+            },
+            {
+              "code": "LY",
+              "name": "临沂市",
+              "name_en": "Linyi"
+            },
+            {
+              "code": "DZ",
+              "name": "德州市",
+              "name_en": "Dezhou"
+            },
+            {
+              "code": "LC",
+              "name": "聊城市",
+              "name_en": "Liaocheng"
+            },
+            {
+              "code": "BZ",
+              "name": "滨州市",
+              "name_en": "Binzhou"
+            },
+            {
+              "code": "HZ",
+              "name": "菏泽市",
+              "name_en": "Heze"
+            }
+          ]
+        },
+        {
+          "code": "HA",
+          "name": "河南省",
+          "name_en": "Henan",
+          "cities": [
+            {
+              "code": "ZZ",
+              "name": "郑州市",
+              "name_en": "Zhengzhou"
+            },
+            {
+              "code": "KF",
+              "name": "开封市",
+              "name_en": "Kaifeng"
+            },
+            {
+              "code": "LY",
+              "name": "洛阳市",
+              "name_en": "Luoyang"
+            },
+            {
+              "code": "PDS",
+              "name": "平顶山市",
+              "name_en": "Pingdingshan"
+            },
+            {
+              "code": "AY",
+              "name": "安阳市",
+              "name_en": "Anyang"
+            },
+            {
+              "code": "HB",
+              "name": "鹤壁市",
+              "name_en": "Hebi"
+            },
+            {
+              "code": "XX",
+              "name": "新乡市",
+              "name_en": "Xinxiang"
+            },
+            {
+              "code": "JZ",
+              "name": "焦作市",
+              "name_en": "Jiaozuo"
+            },
+            {
+              "code": "PY",
+              "name": "濮阳市",
+              "name_en": "Puyang"
+            },
+            {
+              "code": "XC",
+              "name": "许昌市",
+              "name_en": "Xuchang"
+            },
+            {
+              "code": "TH",
+              "name": "漯河市",
+              "name_en": "Tahe"
+            },
+            {
+              "code": "SMX",
+              "name": "三门峡市",
+              "name_en": "Sanmenxia"
+            },
+            {
+              "code": "NY",
+              "name": "南阳市",
+              "name_en": "Nanyang"
+            },
+            {
+              "code": "SQ",
+              "name": "商丘市",
+              "name_en": "Shangqiu"
+            },
+            {
+              "code": "XY",
+              "name": "信阳市",
+              "name_en": "Xinyang"
+            },
+            {
+              "code": "ZK",
+              "name": "周口市",
+              "name_en": "Zhoukou"
+            },
+            {
+              "code": "ZMD",
+              "name": "驻马店市",
+              "name_en": "Zhumadian"
+            },
+            {
+              "code": "JY",
+              "name": "济源市",
+              "name_en": "Jiyuan"
+            }
+          ]
+        },
+        {
+          "code": "HB",
+          "name": "湖北省",
+          "name_en": "Hubei",
+          "cities": [
+            {
+              "code": "WH",
+              "name": "武汉市",
+              "name_en": "Wuhan"
+            },
+            {
+              "code": "HU",
+              "name": "黄石市",
+              "name_en": "Huang"
+            },
+            {
+              "code": "SY",
+              "name": "十堰市",
+              "name_en": "Shiyan"
+            },
+            {
+              "code": "YC",
+              "name": "宜昌市",
+              "name_en": "Yichang"
+            },
+            {
+              "code": "XY",
+              "name": "襄阳市",
+              "name_en": "Xiangyang"
+            },
+            {
+              "code": "EZ",
+              "name": "鄂州市",
+              "name_en": "Ezhou"
+            },
+            {
+              "code": "JM",
+              "name": "荆门市",
+              "name_en": "Jingmen"
+            },
+            {
+              "code": "XG",
+              "name": "孝感市",
+              "name_en": "Xiaogan"
+            },
+            {
+              "code": "JZ",
+              "name": "荆州市",
+              "name_en": "Jingzhou"
+            },
+            {
+              "code": "HG",
+              "name": "黄冈市",
+              "name_en": "Huanggang"
+            },
+            {
+              "code": "XN",
+              "name": "咸宁市",
+              "name_en": "Xianning"
+            },
+            {
+              "code": "SZ",
+              "name": "随州市",
+              "name_en": "Suizhou"
+            },
+            {
+              "code": "ESTJ",
+              "name": "恩施土家族苗族自治州",
+              "name_en": "Enshitujiazumiaozu"
+            },
+            {
+              "code": "XT",
+              "name": "仙桃市",
+              "name_en": "Xiantao"
+            },
+            {
+              "code": "QJ",
+              "name": "潜江市",
+              "name_en": "Qianjiang"
+            },
+            {
+              "code": "TM",
+              "name": "天门市",
+              "name_en": "Tianmen"
+            },
+            {
+              "code": "SNJL",
+              "name": "神农架林区",
+              "name_en": "Shennongjialin"
+            }
+          ]
+        },
+        {
+          "code": "HN",
+          "name": "湖南省",
+          "name_en": "Hunan",
+          "cities": [
+            {
+              "code": "CS",
+              "name": "长沙市",
+              "name_en": "Changsha"
+            },
+            {
+              "code": "ZZ",
+              "name": "株洲市",
+              "name_en": "Zhuzhou"
+            },
+            {
+              "code": "XT",
+              "name": "湘潭市",
+              "name_en": "Xiangtan"
+            },
+            {
+              "code": "HY",
+              "name": "衡阳市",
+              "name_en": "Hengyang"
+            },
+            {
+              "code": "SY",
+              "name": "邵阳市",
+              "name_en": "Shaoyang"
+            },
+            {
+              "code": "YY",
+              "name": "岳阳市",
+              "name_en": "Yueyang"
+            },
+            {
+              "code": "CD",
+              "name": "常德市",
+              "name_en": "Changde"
+            },
+            {
+              "code": "ZJJ",
+              "name": "张家界市",
+              "name_en": "Zhangjiajie"
+            },
+            {
+              "code": "YY2",
+              "name": "益阳市",
+              "name_en": "Yiyang"
+            },
+            {
+              "code": "CZ",
+              "name": "郴州市",
+              "name_en": "Chenzhou"
+            },
+            {
+              "code": "YZ",
+              "name": "永州市",
+              "name_en": "Yongzhou"
+            },
+            {
+              "code": "HH",
+              "name": "怀化市",
+              "name_en": "Huaihua"
+            },
+            {
+              "code": "LD",
+              "name": "娄底市",
+              "name_en": "Loudi"
+            },
+            {
+              "code": "XXTJ",
+              "name": "湘西土家族苗族自治州",
+              "name_en": "Xiangxitujiazumiaozu"
+            }
+          ]
+        },
+        {
+          "code": "GD",
+          "name": "广东省",
+          "name_en": "Guangdong",
+          "cities": [
+            {
+              "code": "GZ",
+              "name": "广州市",
+              "name_en": "Guangzhou"
+            },
+            {
+              "code": "SG",
+              "name": "韶关市",
+              "name_en": "Shaoguan"
+            },
+            {
+              "code": "SZ",
+              "name": "深圳市",
+              "name_en": "Shenzhen"
+            },
+            {
+              "code": "ZH",
+              "name": "珠海市",
+              "name_en": "Zhuhai"
+            },
+            {
+              "code": "ST",
+              "name": "汕头市",
+              "name_en": "Shantou"
+            },
+            {
+              "code": "FS",
+              "name": "佛山市",
+              "name_en": "Foshan"
+            },
+            {
+              "code": "JM",
+              "name": "江门市",
+              "name_en": "Jiangmen"
+            },
+            {
+              "code": "ZJ",
+              "name": "湛江市",
+              "name_en": "Zhanjiang"
+            },
+            {
+              "code": "MM",
+              "name": "茂名市",
+              "name_en": "Maoming"
+            },
+            {
+              "code": "ZQ",
+              "name": "肇庆市",
+              "name_en": "Zhaoqing"
+            },
+            {
+              "code": "HZ",
+              "name": "惠州市",
+              "name_en": "Huizhou"
+            },
+            {
+              "code": "MZ",
+              "name": "梅州市",
+              "name_en": "Meizhou"
+            },
+            {
+              "code": "SW",
+              "name": "汕尾市",
+              "name_en": "Shanwei"
+            },
+            {
+              "code": "HY",
+              "name": "河源市",
+              "name_en": "Heyuan"
+            },
+            {
+              "code": "YJ",
+              "name": "阳江市",
+              "name_en": "Yangjiang"
+            },
+            {
+              "code": "QY",
+              "name": "清远市",
+              "name_en": "Qingyuan"
+            },
+            {
+              "code": "DG",
+              "name": "东莞市",
+              "name_en": "Dongguan"
+            },
+            {
+              "code": "ZS",
+              "name": "中山市",
+              "name_en": "Zhongshan"
+            },
+            {
+              "code": "CZ",
+              "name": "潮州市",
+              "name_en": "Chaozhou"
+            },
+            {
+              "code": "JY",
+              "name": "揭阳市",
+              "name_en": "Jieyang"
+            },
+            {
+              "code": "YF",
+              "name": "云浮市",
+              "name_en": "Yunfu"
+            }
+          ]
+        },
+        {
+          "code": "GX",
+          "name": "广西壮族自治区",
+          "name_en": "Guangxi",
+          "cities": [
+            {
+              "code": "NN",
+              "name": "南宁市",
+              "name_en": "Nanning"
+            },
+            {
+              "code": "LZ",
+              "name": "柳州市",
+              "name_en": "Liuzhou"
+            },
+            {
+              "code": "GL",
+              "name": "桂林市",
+              "name_en": "Guilin"
+            },
+            {
+              "code": "WZ",
+              "name": "梧州市",
+              "name_en": "Wuzhou"
+            },
+            {
+              "code": "BH",
+              "name": "北海市",
+              "name_en": "Beihai"
+            },
+            {
+              "code": "FCG",
+              "name": "防城港市",
+              "name_en": "Fangchenggang"
+            },
+            {
+              "code": "QZ",
+              "name": "钦州市",
+              "name_en": "Qinzhou"
+            },
+            {
+              "code": "GG",
+              "name": "贵港市",
+              "name_en": "Guigang"
+            },
+            {
+              "code": "YL",
+              "name": "玉林市",
+              "name_en": "Yulin"
+            },
+            {
+              "code": "BS",
+              "name": "百色市",
+              "name_en": "Baise"
+            },
+            {
+              "code": "HZ",
+              "name": "贺州市",
+              "name_en": "Hezhou"
+            },
+            {
+              "code": "HC",
+              "name": "河池市",
+              "name_en": "Hechi"
+            },
+            {
+              "code": "LB",
+              "name": "来宾市",
+              "name_en": "Laibin"
+            },
+            {
+              "code": "CZ",
+              "name": "崇左市",
+              "name_en": "Chongzuo"
+            }
+          ]
+        },
+        {
+          "code": "HI",
+          "name": "海南省",
+          "name_en": "Hainan",
+          "cities": [
+            {
+              "code": "HK",
+              "name": "海口市",
+              "name_en": "Haikou"
+            },
+            {
+              "code": "SY",
+              "name": "三亚市",
+              "name_en": "Sanya"
+            },
+            {
+              "code": "SS",
+              "name": "三沙市",
+              "name_en": "Sansha"
+            },
+            {
+              "code": "DZ",
+              "name": "儋州市",
+              "name_en": "Danzhou"
+            },
+            {
+              "code": "WZS",
+              "name": "五指山市",
+              "name_en": "Wuzhishan"
+            },
+            {
+              "code": "QH",
+              "name": "琼海市",
+              "name_en": "Qionghai"
+            },
+            {
+              "code": "WC",
+              "name": "文昌市",
+              "name_en": "Wenchang"
+            },
+            {
+              "code": "WN",
+              "name": "万宁市",
+              "name_en": "Wanning"
+            },
+            {
+              "code": "DF",
+              "name": "东方市",
+              "name_en": "Dongfang"
+            },
+            {
+              "code": "DA",
+              "name": "定安县",
+              "name_en": "Dingan"
+            },
+            {
+              "code": "TC",
+              "name": "屯昌县",
+              "name_en": "Tunchang"
+            },
+            {
+              "code": "CM",
+              "name": "澄迈县",
+              "name_en": "Chengmai"
+            },
+            {
+              "code": "LG",
+              "name": "临高县",
+              "name_en": "Lingao"
+            },
+            {
+              "code": "BSLZ",
+              "name": "白沙黎族自治县",
+              "name_en": "Baishalizu"
+            },
+            {
+              "code": "CJLZ",
+              "name": "昌江黎族自治县",
+              "name_en": "Changjianglizu"
+            },
+            {
+              "code": "LDLZ",
+              "name": "乐东黎族自治县",
+              "name_en": "Ledonglizu"
+            },
+            {
+              "code": "LSLZ",
+              "name": "陵水黎族自治县",
+              "name_en": "Lingshuilizu"
+            },
+            {
+              "code": "BTLZ",
+              "name": "保亭黎族苗族自治县",
+              "name_en": "Baotinglizumiaozu"
+            },
+            {
+              "code": "QZLZ",
+              "name": "琼中黎族苗族自治县",
+              "name_en": "Qiongzhonglizumiaozu"
+            }
+          ]
+        },
+        {
+          "code": "CQ",
+          "name": "重庆市",
+          "name_en": "Chongqing",
+          "cities": [
+            {
+              "code": "WZ",
+              "name": "万州区",
+              "name_en": "Wanzhou"
+            },
+            {
+              "code": "FL",
+              "name": "涪陵区",
+              "name_en": "Fuling"
+            },
+            {
+              "code": "YZ",
+              "name": "渝中区",
+              "name_en": "Yuzhong"
+            },
+            {
+              "code": "DDK",
+              "name": "大渡口区",
+              "name_en": "Dadukou"
+            },
+            {
+              "code": "JB",
+              "name": "江北区",
+              "name_en": "Jiangbei"
+            },
+            {
+              "code": "SPB",
+              "name": "沙坪坝区",
+              "name_en": "Shapingba"
+            },
+            {
+              "code": "JLP",
+              "name": "九龙坡区",
+              "name_en": "Jiulongpo"
+            },
+            {
+              "code": "NA",
+              "name": "南岸区",
+              "name_en": "Nanan"
+            },
+            {
+              "code": "BB",
+              "name": "北碚区",
+              "name_en": "Beibei"
+            },
+            {
+              "code": "QJ",
+              "name": "綦江区",
+              "name_en": "Qijiang"
+            },
+            {
+              "code": "DZ",
+              "name": "大足区",
+              "name_en": "Dazu"
+            },
+            {
+              "code": "YB",
+              "name": "渝北区",
+              "name_en": "Yubei"
+            },
+            {
+              "code": "BN",
+              "name": "巴南区",
+              "name_en": "Banan"
+            },
+            {
+              "code": "QJ2",
+              "name": "黔江区",
+              "name_en": "Qianjiang"
+            },
+            {
+              "code": "CS",
+              "name": "长寿区",
+              "name_en": "Changshou"
+            },
+            {
+              "code": "JJ",
+              "name": "江津区",
+              "name_en": "Jiangjin"
+            },
+            {
+              "code": "HC",
+              "name": "合川区",
+              "name_en": "Hechuan"
+            },
+            {
+              "code": "YC",
+              "name": "永川区",
+              "name_en": "Yongchuan"
+            },
+            {
+              "code": "NC",
+              "name": "南川区",
+              "name_en": "Nanchuan"
+            },
+            {
+              "code": "BS",
+              "name": "璧山区",
+              "name_en": "Bishan"
+            },
+            {
+              "code": "TL",
+              "name": "铜梁区",
+              "name_en": "Tongliang"
+            },
+            {
+              "code": "TN",
+              "name": "潼南区",
+              "name_en": "Tongnan"
+            },
+            {
+              "code": "RC",
+              "name": "荣昌区",
+              "name_en": "Rongchang"
+            },
+            {
+              "code": "KZ",
+              "name": "开州区",
+              "name_en": "Kaizhou"
+            },
+            {
+              "code": "LP",
+              "name": "梁平区",
+              "name_en": "Liangping"
+            },
+            {
+              "code": "WL",
+              "name": "武隆区",
+              "name_en": "Wulong"
+            },
+            {
+              "code": "CK",
+              "name": "城口县",
+              "name_en": "Chengkou"
+            },
+            {
+              "code": "FD",
+              "name": "丰都县",
+              "name_en": "Fengdou"
+            },
+            {
+              "code": "DJ",
+              "name": "垫江县",
+              "name_en": "Dianjiang"
+            },
+            {
+              "code": "ZH",
+              "name": "忠县",
+              "name_en": "Zhong"
+            },
+            {
+              "code": "YY",
+              "name": "云阳县",
+              "name_en": "Yunyang"
+            },
+            {
+              "code": "FJ",
+              "name": "奉节县",
+              "name_en": "Fengjie"
+            },
+            {
+              "code": "WS",
+              "name": "巫山县",
+              "name_en": "Wushan"
+            },
+            {
+              "code": "WX",
+              "name": "巫溪县",
+              "name_en": "Wuxi"
+            },
+            {
+              "code": "SZTJ",
+              "name": "石柱土家族自治县",
+              "name_en": "Shizhutujiazu"
+            },
+            {
+              "code": "XSTJ",
+              "name": "秀山土家族苗族自治县",
+              "name_en": "Xiushantujiazumiaozu"
+            },
+            {
+              "code": "YYTJ",
+              "name": "酉阳土家族苗族自治县",
+              "name_en": "Youyangtujiazumiaozu"
+            },
+            {
+              "code": "PSMZ",
+              "name": "彭水苗族土家族自治县",
+              "name_en": "Pengshuimiaozutujiazu"
+            }
+          ]
+        },
+        {
+          "code": "SC",
+          "name": "四川省",
+          "name_en": "Sichuan",
+          "cities": [
+            {
+              "code": "CD",
+              "name": "成都市",
+              "name_en": "Chengdu"
+            },
+            {
+              "code": "ZG",
+              "name": "自贡市",
+              "name_en": "Zigong"
+            },
+            {
+              "code": "PZH",
+              "name": "攀枝花市",
+              "name_en": "Panzhihua"
+            },
+            {
+              "code": "LZ",
+              "name": "泸州市",
+              "name_en": "Luzhou"
+            },
+            {
+              "code": "DY",
+              "name": "德阳市",
+              "name_en": "Deyang"
+            },
+            {
+              "code": "MY",
+              "name": "绵阳市",
+              "name_en": "Mianyang"
+            },
+            {
+              "code": "GY",
+              "name": "广元市",
+              "name_en": "Guangyuan"
+            },
+            {
+              "code": "SN",
+              "name": "遂宁市",
+              "name_en": "Suining"
+            },
+            {
+              "code": "NJ",
+              "name": "内江市",
+              "name_en": "Neijiang"
+            },
+            {
+              "code": "LS",
+              "name": "乐山市",
+              "name_en": "Leshan"
+            },
+            {
+              "code": "NC",
+              "name": "南充市",
+              "name_en": "Nanchong"
+            },
+            {
+              "code": "MS",
+              "name": "眉山市",
+              "name_en": "Meishan"
+            },
+            {
+              "code": "YB",
+              "name": "宜宾市",
+              "name_en": "Yibin"
+            },
+            {
+              "code": "GA",
+              "name": "广安市",
+              "name_en": "Guangan"
+            },
+            {
+              "code": "DZ",
+              "name": "达州市",
+              "name_en": "Dazhou"
+            },
+            {
+              "code": "YA",
+              "name": "雅安市",
+              "name_en": "Yaan"
+            },
+            {
+              "code": "BZ",
+              "name": "巴中市",
+              "name_en": "Bazhong"
+            },
+            {
+              "code": "ZY",
+              "name": "资阳市",
+              "name_en": "Ziyang"
+            },
+            {
+              "code": "ABZZ",
+              "name": "阿坝藏族羌族自治州",
+              "name_en": "Abazangzuqiangzu"
+            },
+            {
+              "code": "GZZZ",
+              "name": "甘孜藏族自治州",
+              "name_en": "Ganzizangzu"
+            },
+            {
+              "code": "LSYZ",
+              "name": "凉山彝族自治州",
+              "name_en": "Liangshanyizu"
+            }
+          ]
+        },
+        {
+          "code": "GZ",
+          "name": "贵州省",
+          "name_en": "Guizhou",
+          "cities": [
+            {
+              "code": "GY",
+              "name": "贵阳市",
+              "name_en": "Guiyang"
+            },
+            {
+              "code": "LPS",
+              "name": "六盘水市",
+              "name_en": "Liupanshui"
+            },
+            {
+              "code": "ZY",
+              "name": "遵义市",
+              "name_en": "Zunyi"
+            },
+            {
+              "code": "AS",
+              "name": "安顺市",
+              "name_en": "Anshun"
+            },
+            {
+              "code": "BJ",
+              "name": "毕节市",
+              "name_en": "Bijie"
+            },
+            {
+              "code": "TR",
+              "name": "铜仁市",
+              "name_en": "Tongren"
+            },
+            {
+              "code": "QXNB",
+              "name": "黔西南布依族苗族自治州",
+              "name_en": "Qianxinanbuyizumiaozu"
+            },
+            {
+              "code": "QDNM",
+              "name": "黔东南苗族侗族自治州",
+              "name_en": "Qiandongnanmiaozudongzu"
+            },
+            {
+              "code": "QNBY",
+              "name": "黔南布依族苗族自治州",
+              "name_en": "Qiannanbuyizumiaozu"
+            }
+          ]
+        },
+        {
+          "code": "YN",
+          "name": "云南省",
+          "name_en": "Yunnan",
+          "cities": [
+            {
+              "code": "KM",
+              "name": "昆明市",
+              "name_en": "Kunming"
+            },
+            {
+              "code": "QJ",
+              "name": "曲靖市",
+              "name_en": "Qujing"
+            },
+            {
+              "code": "YX",
+              "name": "玉溪市",
+              "name_en": "Yuxi"
+            },
+            {
+              "code": "BS",
+              "name": "保山市",
+              "name_en": "Baoshan"
+            },
+            {
+              "code": "ZT",
+              "name": "昭通市",
+              "name_en": "Zhaotong"
+            },
+            {
+              "code": "LJ",
+              "name": "丽江市",
+              "name_en": "Lijiang"
+            },
+            {
+              "code": "PE",
+              "name": "普洱市",
+              "name_en": "Puer"
+            },
+            {
+              "code": "LC",
+              "name": "临沧市",
+              "name_en": "Lincang"
+            },
+            {
+              "code": "CXYZ",
+              "name": "楚雄彝族自治州",
+              "name_en": "Chuxiongyizu"
+            },
+            {
+              "code": "HHHN",
+              "name": "红河哈尼族彝族自治州",
+              "name_en": "Honghehanizuyizu"
+            },
+            {
+              "code": "WSZZ",
+              "name": "文山壮族苗族自治州",
+              "name_en": "Wenshanzhuangzumiaozu"
+            },
+            {
+              "code": "XSBN",
+              "name": "西双版纳傣族自治州",
+              "name_en": "Xishuangbannadaizu"
+            },
+            {
+              "code": "DLBZ",
+              "name": "大理白族自治州",
+              "name_en": "Dalibaizu"
+            },
+            {
+              "code": "DHDZ",
+              "name": "德宏傣族景颇族自治州",
+              "name_en": "Dehongdaizujingpozu"
+            },
+            {
+              "code": "NJLS",
+              "name": "怒江傈僳族自治州",
+              "name_en": "Nujianglisuzu"
+            },
+            {
+              "code": "DQZZ",
+              "name": "迪庆藏族自治州",
+              "name_en": "Diqingzangzu"
+            }
+          ]
+        },
+        {
+          "code": "XZ",
+          "name": "西藏自治区",
+          "name_en": "Xizang",
+          "cities": [
+            {
+              "code": "LS",
+              "name": "拉萨市",
+              "name_en": "Lasa"
+            },
+            {
+              "code": "RKZ",
+              "name": "日喀则市",
+              "name_en": "Rikaze"
+            },
+            {
+              "code": "CD",
+              "name": "昌都市",
+              "name_en": "Changdu"
+            },
+            {
+              "code": "LZ",
+              "name": "林芝市",
+              "name_en": "Linzhi"
+            },
+            {
+              "code": "SN",
+              "name": "山南市",
+              "name_en": "Shannan"
+            },
+            {
+              "code": "NA",
+              "name": "那曲市",
+              "name_en": "Na"
+            },
+            {
+              "code": "AL",
+              "name": "阿里地区",
+              "name_en": "Ali"
+            }
+          ]
+        },
+        {
+          "code": "SN",
+          "name": "陕西省",
+          "name_en": "Shanxi",
+          "cities": [
+            {
+              "code": "XA",
+              "name": "西安市",
+              "name_en": "Xian"
+            },
+            {
+              "code": "TC",
+              "name": "铜川市",
+              "name_en": "Tongchuan"
+            },
+            {
+              "code": "BJ",
+              "name": "宝鸡市",
+              "name_en": "Baoji"
+            },
+            {
+              "code": "XY",
+              "name": "咸阳市",
+              "name_en": "Xianyang"
+            },
+            {
+              "code": "WN",
+              "name": "渭南市",
+              "name_en": "Weinan"
+            },
+            {
+              "code": "YA",
+              "name": "延安市",
+              "name_en": "Yanan"
+            },
+            {
+              "code": "HZ",
+              "name": "汉中市",
+              "name_en": "Hanzhong"
+            },
+            {
+              "code": "YL",
+              "name": "榆林市",
+              "name_en": "Yulin"
+            },
+            {
+              "code": "AK",
+              "name": "安康市",
+              "name_en": "Ankang"
+            },
+            {
+              "code": "SL",
+              "name": "商洛市",
+              "name_en": "Shangluo"
+            }
+          ]
+        },
+        {
+          "code": "GS",
+          "name": "甘肃省",
+          "name_en": "Gansu",
+          "cities": [
+            {
+              "code": "LZ",
+              "name": "兰州市",
+              "name_en": "Lanzhou"
+            },
+            {
+              "code": "JYG",
+              "name": "嘉峪关市",
+              "name_en": "Jiayuguan"
+            },
+            {
+              "code": "JC",
+              "name": "金昌市",
+              "name_en": "Jinchang"
+            },
+            {
+              "code": "BY",
+              "name": "白银市",
+              "name_en": "Baiyin"
+            },
+            {
+              "code": "TS",
+              "name": "天水市",
+              "name_en": "Tianshui"
+            },
+            {
+              "code": "WW",
+              "name": "武威市",
+              "name_en": "Wuwei"
+            },
+            {
+              "code": "ZY",
+              "name": "张掖市",
+              "name_en": "Zhangye"
+            },
+            {
+              "code": "PL",
+              "name": "平凉市",
+              "name_en": "Pingliang"
+            },
+            {
+              "code": "JQ",
+              "name": "酒泉市",
+              "name_en": "Jiuquan"
+            },
+            {
+              "code": "QY",
+              "name": "庆阳市",
+              "name_en": "Qingyang"
+            },
+            {
+              "code": "DX",
+              "name": "定西市",
+              "name_en": "Dingxi"
+            },
+            {
+              "code": "LN",
+              "name": "陇南市",
+              "name_en": "Longnan"
+            },
+            {
+              "code": "LXHZ",
+              "name": "临夏回族自治州",
+              "name_en": "Linxiahuizu"
+            },
+            {
+              "code": "GNZZ",
+              "name": "甘南藏族自治州",
+              "name_en": "Gannanzangzu"
+            }
+          ]
+        },
+        {
+          "code": "QH",
+          "name": "青海省",
+          "name_en": "Qinghai",
+          "cities": [
+            {
+              "code": "XN",
+              "name": "西宁市",
+              "name_en": "Xining"
+            },
+            {
+              "code": "HD",
+              "name": "海东市",
+              "name_en": "Haidong"
+            },
+            {
+              "code": "HBZZ",
+              "name": "海北藏族自治州",
+              "name_en": "Haibeizangzu"
+            },
+            {
+              "code": "HNZZ",
+              "name": "黄南藏族自治州",
+              "name_en": "Huangnanzangzu"
+            },
+            {
+              "code": "HNZ2",
+              "name": "海南藏族自治州",
+              "name_en": "Hainanzangzu"
+            },
+            {
+              "code": "GLZZ",
+              "name": "果洛藏族自治州",
+              "name_en": "Guoluozangzu"
+            },
+            {
+              "code": "YSZZ",
+              "name": "玉树藏族自治州",
+              "name_en": "Yushuzangzu"
+            },
+            {
+              "code": "HXMG",
+              "name": "海西蒙古族藏族自治州",
+              "name_en": "Haiximengguzuzangzu"
+            }
+          ]
+        },
+        {
+          "code": "NX",
+          "name": "宁夏回族自治区",
+          "name_en": "Ningxia",
+          "cities": [
+            {
+              "code": "YC",
+              "name": "银川市",
+              "name_en": "Yinchuan"
+            },
+            {
+              "code": "SZS",
+              "name": "石嘴山市",
+              "name_en": "Shizuishan"
+            },
+            {
+              "code": "WZ",
+              "name": "吴忠市",
+              "name_en": "Wuzhong"
+            },
+            {
+              "code": "GY",
+              "name": "固原市",
+              "name_en": "Guyuan"
+            },
+            {
+              "code": "ZW",
+              "name": "中卫市",
+              "name_en": "Zhongwei"
+            }
+          ]
+        },
+        {
+          "code": "XJ",
+          "name": "新疆维吾尔自治区",
+          "name_en": "Xinjiang",
+          "cities": [
+            {
+              "code": "WLMQ",
+              "name": "乌鲁木齐市",
+              "name_en": "Wulumuqi"
+            },
+            {
+              "code": "KLMY",
+              "name": "克拉玛依市",
+              "name_en": "Kelamayi"
+            },
+            {
+              "code": "TLF",
+              "name": "吐鲁番市",
+              "name_en": "Tulufan"
+            },
+            {
+              "code": "HM",
+              "name": "哈密市",
+              "name_en": "Hami"
+            },
+            {
+              "code": "CJHZ",
+              "name": "昌吉回族自治州",
+              "name_en": "Changjihuizu"
+            },
+            {
+              "code": "BETL",
+              "name": "博尔塔拉蒙古自治州",
+              "name_en": "Boertalamenggu"
+            },
+            {
+              "code": "BYGL",
+              "name": "巴音郭楞蒙古自治州",
+              "name_en": "Bayinguolengmenggu"
+            },
+            {
+              "code": "AKS",
+              "name": "阿克苏地区",
+              "name_en": "Akesu"
+            },
+            {
+              "code": "KZLS",
+              "name": "克孜勒苏柯尔克孜自治州",
+              "name_en": "Kezileisukeerkezi"
+            },
+            {
+              "code": "KA",
+              "name": "喀什地区",
+              "name_en": "Ka"
+            },
+            {
+              "code": "HT",
+              "name": "和田地区",
+              "name_en": "Hetian"
+            },
+            {
+              "code": "YLHS",
+              "name": "伊犁哈萨克自治州",
+              "name_en": "Yilihasake"
+            },
+            {
+              "code": "TC",
+              "name": "塔城地区",
+              "name_en": "Tacheng"
+            },
+            {
+              "code": "ALT",
+              "name": "阿勒泰地区",
+              "name_en": "Aleitai"
+            },
+            {
+              "code": "SHZ",
+              "name": "石河子市",
+              "name_en": "Shihezi"
+            },
+            {
+              "code": "ALE",
+              "name": "阿拉尔市",
+              "name_en": "Alaer"
+            },
+            {
+              "code": "TMSK",
+              "name": "图木舒克市",
+              "name_en": "Tumushuke"
+            },
+            {
+              "code": "WJ",
+              "name": "五家渠市",
+              "name_en": "Wujia"
+            },
+            {
+              "code": "BT",
+              "name": "北屯市",
+              "name_en": "Beitun"
+            },
+            {
+              "code": "TMG",
+              "name": "铁门关市",
+              "name_en": "Tiemenguan"
+            },
+            {
+              "code": "SH",
+              "name": "双河市",
+              "name_en": "Shuanghe"
+            },
+            {
+              "code": "KKDL",
+              "name": "可克达拉市",
+              "name_en": "Kekedala"
+            },
+            {
+              "code": "KY",
+              "name": "昆玉市",
+              "name_en": "Kunyu"
+            },
+            {
+              "code": "HYH",
+              "name": "胡杨河市",
+              "name_en": "Huyanghe"
+            },
+            {
+              "code": "XX",
+              "name": "新星市",
+              "name_en": "Xinxing"
+            },
+            {
+              "code": "BY",
+              "name": "白杨市",
+              "name_en": "Baiyang"
+            }
           ]
         }
       ]
@@ -43,7 +2490,270 @@
       "name": "日本",
       "name_en": "Japan",
       "provinces": []
+    },
+    {
+      "code": "KR",
+      "name": "韩国",
+      "name_en": "South Korea",
+      "provinces": []
+    },
+    {
+      "code": "SG",
+      "name": "新加坡",
+      "name_en": "Singapore",
+      "provinces": []
+    },
+    {
+      "code": "MY",
+      "name": "马来西亚",
+      "name_en": "Malaysia",
+      "provinces": []
+    },
+    {
+      "code": "TH",
+      "name": "泰国",
+      "name_en": "Thailand",
+      "provinces": []
+    },
+    {
+      "code": "VN",
+      "name": "越南",
+      "name_en": "Vietnam",
+      "provinces": []
+    },
+    {
+      "code": "PH",
+      "name": "菲律宾",
+      "name_en": "Philippines",
+      "provinces": []
+    },
+    {
+      "code": "ID",
+      "name": "印度尼西亚",
+      "name_en": "Indonesia",
+      "provinces": []
+    },
+    {
+      "code": "IN",
+      "name": "印度",
+      "name_en": "India",
+      "provinces": []
+    },
+    {
+      "code": "AU",
+      "name": "澳大利亚",
+      "name_en": "Australia",
+      "provinces": []
+    },
+    {
+      "code": "NZ",
+      "name": "新西兰",
+      "name_en": "New Zealand",
+      "provinces": []
+    },
+    {
+      "code": "GB",
+      "name": "英国",
+      "name_en": "United Kingdom",
+      "provinces": []
+    },
+    {
+      "code": "FR",
+      "name": "法国",
+      "name_en": "France",
+      "provinces": []
+    },
+    {
+      "code": "DE",
+      "name": "德国",
+      "name_en": "Germany",
+      "provinces": []
+    },
+    {
+      "code": "IT",
+      "name": "意大利",
+      "name_en": "Italy",
+      "provinces": []
+    },
+    {
+      "code": "ES",
+      "name": "西班牙",
+      "name_en": "Spain",
+      "provinces": []
+    },
+    {
+      "code": "NL",
+      "name": "荷兰",
+      "name_en": "Netherlands",
+      "provinces": []
+    },
+    {
+      "code": "BE",
+      "name": "比利时",
+      "name_en": "Belgium",
+      "provinces": []
+    },
+    {
+      "code": "CH",
+      "name": "瑞士",
+      "name_en": "Switzerland",
+      "provinces": []
+    },
+    {
+      "code": "SE",
+      "name": "瑞典",
+      "name_en": "Sweden",
+      "provinces": []
+    },
+    {
+      "code": "NO",
+      "name": "挪威",
+      "name_en": "Norway",
+      "provinces": []
+    },
+    {
+      "code": "DK",
+      "name": "丹麦",
+      "name_en": "Denmark",
+      "provinces": []
+    },
+    {
+      "code": "FI",
+      "name": "芬兰",
+      "name_en": "Finland",
+      "provinces": []
+    },
+    {
+      "code": "IE",
+      "name": "爱尔兰",
+      "name_en": "Ireland",
+      "provinces": []
+    },
+    {
+      "code": "AT",
+      "name": "奥地利",
+      "name_en": "Austria",
+      "provinces": []
+    },
+    {
+      "code": "PT",
+      "name": "葡萄牙",
+      "name_en": "Portugal",
+      "provinces": []
+    },
+    {
+      "code": "PL",
+      "name": "波兰",
+      "name_en": "Poland",
+      "provinces": []
+    },
+    {
+      "code": "CZ",
+      "name": "捷克",
+      "name_en": "Czech Republic",
+      "provinces": []
+    },
+    {
+      "code": "HU",
+      "name": "匈牙利",
+      "name_en": "Hungary",
+      "provinces": []
+    },
+    {
+      "code": "RU",
+      "name": "俄罗斯",
+      "name_en": "Russia",
+      "provinces": []
+    },
+    {
+      "code": "CA",
+      "name": "加拿大",
+      "name_en": "Canada",
+      "provinces": []
+    },
+    {
+      "code": "MX",
+      "name": "墨西哥",
+      "name_en": "Mexico",
+      "provinces": []
+    },
+    {
+      "code": "BR",
+      "name": "巴西",
+      "name_en": "Brazil",
+      "provinces": []
+    },
+    {
+      "code": "AR",
+      "name": "阿根廷",
+      "name_en": "Argentina",
+      "provinces": []
+    },
+    {
+      "code": "CL",
+      "name": "智利",
+      "name_en": "Chile",
+      "provinces": []
+    },
+    {
+      "code": "CO",
+      "name": "哥伦比亚",
+      "name_en": "Colombia",
+      "provinces": []
+    },
+    {
+      "code": "PE",
+      "name": "秘鲁",
+      "name_en": "Peru",
+      "provinces": []
+    },
+    {
+      "code": "AE",
+      "name": "阿联酋",
+      "name_en": "United Arab Emirates",
+      "provinces": []
+    },
+    {
+      "code": "SA",
+      "name": "沙特阿拉伯",
+      "name_en": "Saudi Arabia",
+      "provinces": []
+    },
+    {
+      "code": "TR",
+      "name": "土耳其",
+      "name_en": "Turkey",
+      "provinces": []
+    },
+    {
+      "code": "IL",
+      "name": "以色列",
+      "name_en": "Israel",
+      "provinces": []
+    },
+    {
+      "code": "EG",
+      "name": "埃及",
+      "name_en": "Egypt",
+      "provinces": []
+    },
+    {
+      "code": "ZA",
+      "name": "南非",
+      "name_en": "South Africa",
+      "provinces": []
+    },
+    {
+      "code": "NG",
+      "name": "尼日利亚",
+      "name_en": "Nigeria",
+      "provinces": []
+    },
+    {
+      "code": "KE",
+      "name": "肯尼亚",
+      "name_en": "Kenya",
+      "provinces": []
     }
   ]
 }
-
