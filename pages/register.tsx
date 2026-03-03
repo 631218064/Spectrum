@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { PlusOutlined } from '@ant-design/icons';
+import { GlobalOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import Cascader from 'antd/lib/cascader';
 import DatePicker from 'antd/lib/date-picker';
@@ -532,8 +532,9 @@ export default function RegistrationPage() {
           <button
             type="button"
             onClick={() => setLang((prev) => (prev === 'zh' ? 'en' : 'zh'))}
-            className="rounded-full border border-[#bed0eb] bg-white/70 px-4 py-1.5 text-sm font-semibold text-[#3f4e6f]"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#bed0eb] bg-white/70 px-4 py-1.5 text-sm font-semibold text-[#3f4e6f]"
           >
+            <GlobalOutlined />
             {t.toggleLang}
           </button>
         </div>

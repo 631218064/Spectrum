@@ -66,8 +66,8 @@
 
 ### 第二部分：感官与直觉  
 **描述（需翻译）**：  
-- 中文：这些问题没有对错，只有你独特的感知世界的方式。它们会成为第一天线索的灵感来源。  
-- 英文：There are no right or wrong answers—only your unique way of perceiving the world. These will inspire the first day's clues.
+- 中文：这些问题没有对错，只有你独特的感知世界的方式。它们会成为线索的灵感来源。  
+- 英文：There are no right or wrong answers—only your unique way of perceiving the world. These will inspire the clues.
 
 | 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
 |--------|------|---------------|-------------|----------|
@@ -79,8 +79,8 @@
 
 ### 第三部分：生活仪式感与“怪癖”  
 **描述（需翻译）**：  
-- 中文：正是这些微小而确定的习惯，构成了独一无二的你。我们会把你的某个习惯变成第三天的谜题。  
-- 英文：It's these small, definite habits that make you uniquely you. One of your rituals will become the third day's mystery.
+- 中文：正是这些微小而确定的习惯，构成了独一无二的你。
+- 英文：It's these small, definite habits that make you uniquely you.
 
 | 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
 |--------|------|---------------|-------------|----------|
@@ -127,8 +127,8 @@
 
 ### 第七部分：隐私与设置  
 **描述（需翻译）**：  
-- 中文：控制你的匹配体验。  
-- 英文：Control your matching experience.
+- 中文：只给对的人，解锁联系你的途径。  
+- 英文：Only for the right people, unlock the way to contact you.
 
 | 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
 |--------|------|---------------|-------------|----------|
