@@ -1,129 +1,106 @@
-// pages/api/matches/request.ts
-// 发送匹配请求
-
 import { NextApiRequest, NextApiResponse } from 'next';
+import { createMatchAndClues, getQuotaInfo } from '@/lib/matchRuntime';
+import { pickTopCandidate, type ProfileForMatch } from '@/lib/matchingRulesEngine';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
+function extractOtherUserId(row: any, me: string) {
+  if (row.user1_id && row.user2_id) return row.user1_id === me ? row.user2_id : row.user1_id;
+  if (row.from_user_id && row.to_user_id) return row.from_user_id === me ? row.to_user_id : row.from_user_id;
+  return '';
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: 'Missing authorization' });
   const token = authHeader.split(' ')[1];
-
-  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+  const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
+  const user = authData.user;
   if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
 
-  const { toUserId } = req.body;
-  if (!toUserId) {
-    return res.status(400).json({ error: 'Missing toUserId' });
-  }
-
-  // 不能给自己发请求
-  if (toUserId === user.id) {
-    return res.status(400).json({ error: 'Cannot send request to yourself' });
-  }
-
   try {
-    // 检查是否已存在 pending 请求
-    const { data: existing } = await supabaseAdmin
-      .from('match_requests')
-      .select('id')
-      .eq('from_user_id', user.id)
-      .eq('to_user_id', toUserId)
-      .eq('status', 'pending')
-      .maybeSingle();
-
-    if (existing) {
-      return res.status(400).json({ error: 'Request already sent' });
+    const quota = await getQuotaInfo(user.id);
+    if (quota.remaining <= 0) {
+      return res.status(400).json({ error: 'Weekly quota reached' });
     }
 
-    // 检查对方是否已向你发送请求（若是则直接匹配）
-    const { data: reverse } = await supabaseAdmin
-      .from('match_requests')
+    const { data: me, error: meError } = await supabaseAdmin
+      .from('profiles')
       .select('*')
-      .eq('from_user_id', toUserId)
-      .eq('to_user_id', user.id)
-      .eq('status', 'pending')
-      .maybeSingle();
+      .eq('id', user.id)
+      .single();
+    if (meError || !me) return res.status(400).json({ error: 'Profile not found' });
 
+    const nowIso = new Date().toISOString();
+    const recent30Iso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [allProfilesResp, activeResp, pendingResp, terminatedResp, reverseResp] = await Promise.all([
+      supabaseAdmin.from('profiles').select('*').neq('id', user.id),
+      supabaseAdmin
+        .from('matches')
+        .select('user1_id,user2_id')
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .eq('status', 'active'),
+      supabaseAdmin
+        .from('match_requests')
+        .select('from_user_id,to_user_id')
+        .or(`from_user_id.eq.${user.id},to_user_id.eq.${user.id}`)
+        .eq('status', 'pending')
+        .gt('expires_at', nowIso),
+      supabaseAdmin
+        .from('matches')
+        .select('user1_id,user2_id,terminated_at')
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .eq('status', 'terminated')
+        .gte('terminated_at', recent30Iso),
+      supabaseAdmin
+        .from('match_requests')
+        .select('id,from_user_id,to_user_id,status')
+        .eq('to_user_id', user.id)
+        .eq('status', 'pending')
+        .gt('expires_at', nowIso),
+    ]);
+
+    if (allProfilesResp.error) throw allProfilesResp.error;
+    if (activeResp.error) throw activeResp.error;
+    if (pendingResp.error) throw pendingResp.error;
+    if (terminatedResp.error) throw terminatedResp.error;
+    if (reverseResp.error) throw reverseResp.error;
+
+    const blocked = new Set<string>();
+    for (const row of activeResp.data || []) blocked.add(extractOtherUserId(row, user.id));
+    for (const row of pendingResp.data || []) blocked.add(extractOtherUserId(row, user.id));
+    for (const row of terminatedResp.data || []) blocked.add(extractOtherUserId(row, user.id));
+    blocked.delete('');
+
+    const candidates = ((allProfilesResp.data || []) as ProfileForMatch[]).filter((p) => p.id !== user.id && !blocked.has(p.id));
+    const top = pickTopCandidate(me as ProfileForMatch, candidates);
+    if (!top) return res.status(404).json({ error: 'No new matches available' });
+
+    const reverse = (reverseResp.data || []).find((r) => r.from_user_id === top.profile.id);
     if (reverse) {
-      // 互相喜欢，创建匹配
-      // 调用 respond 逻辑（可复用函数，此处简化）
-      // 实际项目中可抽取为公共函数
-      const matchId = await createMatch(user.id, toUserId);
-      // 删除原请求
+      const matchId = await createMatchAndClues(reverse.from_user_id, reverse.to_user_id, 'realtime');
       await supabaseAdmin.from('match_requests').delete().eq('id', reverse.id);
-      // 扣除匹配限额
-      await supabaseAdmin.rpc('decrement_match_usage', { uid: user.id });
-      await supabaseAdmin.rpc('decrement_match_usage', { uid: toUserId });
-      // 生成线索（调用 AI 或模板）
-      await generateCluesForMatch(matchId);
-
-      return res.status(200).json({ matchId, status: 'matched' });
+      return res.status(200).json({ status: 'matched', matchId, candidateId: top.profile.id, score: top.score });
     }
 
-    // 创建新请求
     const { error: insertError } = await supabaseAdmin
       .from('match_requests')
       .insert({
         from_user_id: user.id,
-        to_user_id: toUserId,
+        to_user_id: top.profile.id,
+        status: 'pending',
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       });
-
     if (insertError) throw insertError;
 
-    // 可选：发送通知（此处略）
-    return res.status(200).json({ status: 'pending' });
+    return res.status(200).json({
+      status: 'pending',
+      candidateId: top.profile.id,
+      score: top.score,
+    });
   } catch (err: any) {
-    console.error('Match request error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message || 'Request failed' });
   }
-}
-
-// 辅助函数：创建匹配记录
-async function createMatch(uid1: string, uid2: string): Promise<string> {
-  const { data, error } = await supabaseAdmin
-    .from('matches')
-    .insert({ user1_id: uid1, user2_id: uid2 })
-    .select('id')
-    .single();
-  if (error) throw error;
-  return data.id;
-}
-
-// 辅助函数：为匹配生成线索（调用 AI 模块）
-async function generateCluesForMatch(matchId: string) {
-  // 获取双方资料
-  const { data: match, error } = await supabaseAdmin
-    .from('matches')
-    .select('user1_id, user2_id')
-    .eq('id', matchId)
-    .single();
-  if (error) throw error;
-
-  const [user1, user2] = await Promise.all([
-    supabaseAdmin.from('profiles').select('*').eq('id', match.user1_id).single(),
-    supabaseAdmin.from('profiles').select('*').eq('id', match.user2_id).single(),
-  ]);
-
-  // 导入 AI 生成函数
-  const { generateDailyClues } = await import('@/lib/ai');
-  const clues = await generateDailyClues(user1.data, user2.data);
-
-  // 更新匹配记录
-  const { error: updateError } = await supabaseAdmin
-    .from('matches')
-    .update({
-      day1_clues: clues.day1,
-      day2_clues: clues.day2,
-      day3_clues: clues.day3,
-      day4_clues: clues.day4,
-    })
-    .eq('id', matchId);
-
-  if (updateError) throw updateError;
 }

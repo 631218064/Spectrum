@@ -1,64 +1,111 @@
-// pages/api/matches/index.ts
-// 获取当前用户的所有活跃匹配
-
 import { NextApiRequest, NextApiResponse } from 'next';
+import { getNextUnlockAt, getQuotaInfo, getSecondBeijingEightAfter, isInTrialPeriod } from '@/lib/matchRuntime';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+function parseMaybeJson(value: any) {
+  if (value == null) return value;
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
   }
+  return value;
+}
+
+function toName(profile: any) {
+  return profile?.nickname || profile?.username || 'User';
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: 'Missing authorization' });
   const token = authHeader.split(' ')[1];
-
-  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+  const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
+  const user = authData.user;
   if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
 
   try {
-    // 查询 matches 表，获取与当前用户相关的所有活跃匹配
-    const { data, error } = await supabaseAdmin
-      .from('matches')
-      .select(`
-        *,
-        user1:profiles!matches_user1_id_fkey(*),
-        user2:profiles!matches_user2_id_fkey(*)
-      `)
-      .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-      .eq('status', 'active');
+    const serverTime = new Date().toISOString();
+    const quota = await getQuotaInfo(user.id);
+    const nowIso = new Date().toISOString();
 
-    if (error) throw error;
+    const [notificationsResp, matchesResp] = await Promise.all([
+      supabaseAdmin
+        .from('match_requests')
+        .select('id,created_at,expires_at,from_user_id,to_user_id,fromUser:profiles!match_requests_from_user_id_fkey(id,nickname,username,profile_photo_url,photos)')
+        .eq('to_user_id', user.id)
+        .eq('status', 'pending')
+        .gt('expires_at', nowIso)
+        .order('created_at', { ascending: false }),
+      supabaseAdmin
+        .from('matches')
+        .select(
+          `
+          *,
+          user1:profiles!matches_user1_id_fkey(*),
+          user2:profiles!matches_user2_id_fkey(*)
+        `
+        )
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false }),
+    ]);
 
-    // 整理数据：确定对方信息，解析线索 JSON
-    const matches = (data || []).map((match: any) => {
+    if (notificationsResp.error) throw notificationsResp.error;
+    if (matchesResp.error) throw matchesResp.error;
+
+    const notifications = (notificationsResp.data || []).map((item: any) => ({
+      id: item.id,
+      created_at: item.created_at,
+      expires_at: item.expires_at,
+      fromUser: {
+        id: item.fromUser?.id || item.from_user_id,
+        nickname: toName(item.fromUser),
+        profile_photo_url: item.fromUser?.profile_photo_url || parseMaybeJson(item.fromUser?.photos)?.[0] || '',
+      },
+    }));
+
+    const matches = (matchesResp.data || []).map((match: any) => {
       const isUser1 = match.user1_id === user.id;
       const otherUser = isUser1 ? match.user2 : match.user1;
+      const createdAt = match.created_at || serverTime;
+      const photos = parseMaybeJson(otherUser?.photos) || [];
       return {
         id: match.id,
-        current_day: match.current_day,
-        status: match.status,
-        created_at: match.created_at,
-        day1_clues: typeof match.day1_clues === 'string' ? JSON.parse(match.day1_clues) : match.day1_clues,
-        day2_clues: typeof match.day2_clues === 'string' ? JSON.parse(match.day2_clues) : match.day2_clues,
-        day3_clues: typeof match.day3_clues === 'string' ? JSON.parse(match.day3_clues) : match.day3_clues,
-        day4_clues: typeof match.day4_clues === 'string' ? JSON.parse(match.day4_clues) : match.day4_clues,
-        day5_unlocked_at: match.day5_unlocked_at,
+        current_day: Number(match.current_day || 1),
+        created_at: createdAt,
+        trial_ends_at: getSecondBeijingEightAfter(createdAt),
+        isInTrialPeriod: isInTrialPeriod(createdAt, serverTime),
+        next_unlock_at: match.next_unlock_at || getNextUnlockAt(serverTime),
+        match_source: match.match_source || 'invite',
+        day1_clues: parseMaybeJson(match.day1_clues) || [],
+        day2_clues: parseMaybeJson(match.day2_clues) || [],
+        day3_clues: parseMaybeJson(match.day3_clues) || [],
+        day4_clues: parseMaybeJson(match.day4_clues) || [],
+        day5_unlocked_at: match.day5_unlocked_at || null,
         otherUser: {
-          id: otherUser.id,
-          username: otherUser.username,
-          mbti: otherUser.mbti,
-          role: otherUser.role,
-          profile_photo_url: otherUser.profile_photo_url,
-          preferred_contact: otherUser.preferred_contact,
-          // 可根据需要添加其他字段
+          id: otherUser?.id || '',
+          nickname: toName(otherUser),
+          mbti: otherUser?.mbti || '',
+          sexual_orientation: otherUser?.sexual_orientation || '',
+          photos,
+          profile_photo_url: otherUser?.profile_photo_url || photos[0] || '',
+          contact_info: otherUser?.contact_info || otherUser?.preferred_contact || '',
         },
       };
     });
 
-    return res.status(200).json(matches);
+    return res.status(200).json({
+      serverTime,
+      quota,
+      notifications,
+      matches,
+    });
   } catch (err: any) {
-    console.error('Fetch matches error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message || 'Load matches failed' });
   }
 }

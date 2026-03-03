@@ -14,32 +14,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 更新所有 status='active' 的匹配，将 current_day +1，但不超过 5
-    const { data, error } = await supabaseAdmin
+    // 读取所有需要推进 day 的匹配，再批量更新，避免使用 raw SQL 依赖
+    const { data: rows, error: fetchRowsError } = await supabaseAdmin
       .from('matches')
-      .update({ current_day: supabaseAdmin.raw('LEAST(current_day + 1, 5)') })
+      .select('id,current_day')
       .eq('status', 'active')
-      .lt('current_day', 5) // 只更新还没到第5天的
-      .select();
+      .lt('current_day', 5);
 
-    if (error) throw error;
+    if (fetchRowsError) throw fetchRowsError;
+    const nextRows = (rows || []).map((m: any) => ({ id: m.id, current_day: Math.min(5, Number(m.current_day || 1) + 1) }));
+    if (nextRows.length > 0) {
+      for (const row of nextRows) {
+        const { error: updateError } = await supabaseAdmin
+          .from('matches')
+          .update({ current_day: row.current_day })
+          .eq('id', row.id);
+        if (updateError) throw updateError;
+      }
+    }
 
     // 对于达到第5天的匹配，记录解锁时间
-    const { data: day5Matches, error: fetchError } = await supabaseAdmin
+    const { data: day5Matches, error: fetchDay5Error } = await supabaseAdmin
       .from('matches')
       .select('id')
       .eq('status', 'active')
       .eq('current_day', 5)
       .is('day5_unlocked_at', null);
 
-    if (!fetchError && day5Matches.length > 0) {
+    if (!fetchDay5Error && (day5Matches || []).length > 0) {
       await supabaseAdmin
         .from('matches')
         .update({ day5_unlocked_at: new Date().toISOString() })
-        .in('id', day5Matches.map(m => m.id));
+        .in('id', (day5Matches || []).map((m: any) => m.id));
     }
 
-    return res.status(200).json({ updated: data?.length || 0 });
+    return res.status(200).json({ updated: nextRows.length });
   } catch (err: any) {
     console.error('Daily reveal error:', err);
     return res.status(500).json({ error: err.message });

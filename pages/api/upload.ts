@@ -41,8 +41,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const fileBuffer = fs.readFileSync(file.filepath);
       // 上传到 Supabase Storage
       const publicUrl = await uploadProfilePhoto(
-        { buffer: fileBuffer, originalname: file.originalFilename, mimetype: file.mimetype } as any,
-        user.id
+        {
+          buffer: fileBuffer,
+          originalFilename: file.originalFilename || 'upload.jpg',
+          mimetype: file.mimetype || 'application/octet-stream',
+        } as any,
+        user.id,
+        true
       );
 
       // 更新用户资料的 profile_photo_url

@@ -506,8 +506,25 @@ export default function RegistrationPage() {
       }
 
       // 褰撳墠椤圭洰鍚庣灏氭湭鍒囨崲鍒版柊 schema锛屽厛杈撳嚭鏈€缁?payload锛屽悗缁鎺ユ柊 API銆?
-      // eslint-disable-next-line no-console
-      console.log('registration payload', payload);
+      if (!token) {
+        setSubmitState('error');
+        return;
+      }
+      const resp = await fetch('/api/profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) {
+        const body = (await resp.json().catch(() => ({}))) as { error?: string; errors?: Record<string, string> };
+        if (body.errors) setErrors(body.errors);
+        setTip(body.error || t.submitFailed);
+        setSubmitState('error');
+        return;
+      }
 
       setSubmitState('success');
       window.localStorage.removeItem(DRAFT_KEY);

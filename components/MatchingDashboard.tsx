@@ -1,26 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import {
-  Avatar,
-  Badge,
-  Button,
-  Card,
-  Collapse,
-  ConfigProvider,
-  Drawer,
-  Dropdown,
-  Empty,
-  Image,
-  Input,
-  List,
-  Modal,
-  Progress,
-  Space,
-  Tag,
-  Tooltip,
-  Typography,
-  notification,
-} from 'antd';
+import Avatar from 'antd/lib/avatar';
+import Badge from 'antd/lib/badge';
+import Button from 'antd/lib/button';
+import Card from 'antd/lib/card';
+import Collapse from 'antd/lib/collapse';
+import ConfigProvider from 'antd/lib/config-provider';
+import Drawer from 'antd/lib/drawer';
+import Dropdown from 'antd/lib/dropdown';
+import Empty from 'antd/lib/empty';
+import Image from 'antd/lib/image';
+import Input from 'antd/lib/input';
+import List from 'antd/lib/list';
+import Modal from 'antd/lib/modal';
+import Progress from 'antd/lib/progress';
+import Space from 'antd/lib/space';
+import Tag from 'antd/lib/tag';
+import Tooltip from 'antd/lib/tooltip';
+import Typography from 'antd/lib/typography';
+import notification from 'antd/lib/notification';
 import {
   BellOutlined,
   CheckOutlined,
