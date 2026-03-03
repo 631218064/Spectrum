@@ -121,7 +121,7 @@
 | 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
 |--------|------|---------------|-------------|----------|
 | `valued_traits` | 多选（最多3项） | 最看重的三个特质 / Top 3 Valued Traits | `humor`<br>`gentle`<br>`ambitious`<br>`intelligent`<br>`independent`<br>`romantic`<br>`sincere`<br>`patient`<br>`loves_life`<br>`good_looking`<br>`financially_stable`<br>`loves_animals`<br>`family_oriented`<br>`custom` | 至少1项，最多3项；`custom` 计入上限；选 `custom` 时 `valued_traits_custom` 必填 |
-| `relationship_goal` | 多选（最多2项） | 你期待在这段关系中收获什么？ / What are you looking for? | `stable_partner`<br>`deep_connection`<br>`playmate`<br>`healing`<br>`no_expectations` | 至少1项，最多2项 |
+| `relationship_goal` | 多选（最多2项） | 你期待在关系中收获什么（最多选两项） / What are you looking for? (max 2) | `stable_partner`<br>`deep_connection`<br>`playmate`<br>`healing`<br>`no_expectations` | 至少1项，最多2项 |
 
 ---
 

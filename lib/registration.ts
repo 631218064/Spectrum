@@ -35,7 +35,6 @@ export interface RegistrationFormData {
   valued_traits: string[];
   valued_traits_custom: string;
   relationship_goal: string[];
-  avatar_filter: string;
   photos: string[];
   contact_info: string;
   agree_terms: boolean;
@@ -75,7 +74,6 @@ const REQUIRED_STRING_FIELDS: Array<keyof RegistrationFormData> = [
   'recharge_style',
   'mystery_question',
   'mystery_answer',
-  'avatar_filter',
   'contact_info',
 ];
 
@@ -109,7 +107,6 @@ export function emptyRegistrationFormData(): RegistrationFormData {
     valued_traits: [],
     valued_traits_custom: '',
     relationship_goal: [],
-    avatar_filter: '',
     photos: [],
     contact_info: '',
     agree_terms: false,

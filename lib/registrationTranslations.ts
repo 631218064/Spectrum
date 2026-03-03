@@ -55,7 +55,6 @@ interface RegistrationText {
     recharge_style: OptionDict;
     valued_traits: OptionDict;
     relationship_goal: OptionDict;
-    avatar_filter: OptionDict;
   };
 }
 
@@ -127,9 +126,8 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
       mystery_answer: '我的答案',
       valued_traits: '最看重的三个特质',
       valued_traits_custom: '自定义特质',
-      relationship_goal: '你期待在关系中收获什么',
+      relationship_goal: '你期待在关系中收获什么（最多选两项）',
       photos: '照片墙',
-      avatar_filter: '外貌滤镜',
       contact_info: '联系方式',
       agree_terms: '同意条款',
     },
@@ -294,10 +292,6 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
         healing: '互相治愈',
         no_expectations: '先认识，不预设',
       },
-      avatar_filter: {
-        cartoon: '卡通化头像',
-        blur: '模糊真实照片（逐渐清晰）',
-      },
     },
   },
   en: {
@@ -367,9 +361,8 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
       mystery_answer: 'My Answer',
       valued_traits: 'Top 3 Valued Traits',
       valued_traits_custom: 'Custom Trait',
-      relationship_goal: 'What are you looking for?',
+      relationship_goal: 'What are you looking for? (max 2)',
       photos: 'Photo Wall',
-      avatar_filter: 'Avatar Filter',
       contact_info: 'Contact Info',
       agree_terms: 'Agree to Terms',
     },
@@ -533,10 +526,6 @@ export const registrationTranslations: Record<Language, RegistrationText> = {
         playmate: 'Playmate',
         healing: 'Healing',
         no_expectations: 'No expectations yet',
-      },
-      avatar_filter: {
-        cartoon: 'Cartoonized avatar',
-        blur: 'Blurred real photo (gradually reveal)',
       },
     },
   },

@@ -116,16 +116,18 @@ function ChoiceGroup({
     <div className={cn('flex gap-2', noWrap ? 'flex-nowrap overflow-x-auto pb-1' : 'flex-wrap', containerClassName)}>
       {values.map((value) => {
         const active = selectedSet.has(value);
+        const current = Array.isArray(selected) ? selected : [];
+        const disabled = Boolean(multi && max && !active && current.length >= max);
         return (
           <button
             key={value}
             type="button"
+            disabled={disabled}
             onClick={() => {
               if (!multi) {
                 onChange(value);
                 return;
               }
-              const current = Array.isArray(selected) ? selected : [];
               if (active) {
                 onChange(current.filter((item) => item !== value));
                 return;
@@ -141,6 +143,7 @@ function ChoiceGroup({
                 ? 'border-transparent bg-[#6495ED] text-white shadow-[0_6px_18px_rgba(100,149,237,0.28)]'
                 : 'border-[#c8d2e3] bg-white/70 text-[#344057] hover:border-[#9ac6ff]'
               ,
+              disabled && 'cursor-not-allowed opacity-45 hover:border-[#c8d2e3]',
               buttonClassName
             )}
           >
@@ -405,7 +408,6 @@ export default function RegistrationPage() {
       'valued_traits',
       'valued_traits_custom',
       'relationship_goal',
-      'avatar_filter',
       'contact_info',
       'agree_terms',
     ];
@@ -453,7 +455,7 @@ export default function RegistrationPage() {
     if (currentStep === 5) {
       return ['valued_traits', ...(currentForm.valued_traits.includes('custom') ? ['valued_traits_custom'] : []), 'relationship_goal'];
     }
-    return ['avatar_filter', 'contact_info', 'agree_terms'];
+    return ['contact_info', 'agree_terms'];
   };
 
   const fullValidation = useMemo(() => validateRegistrationForm(sanitizePayload(form)), [form]);
@@ -524,7 +526,7 @@ export default function RegistrationPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_15%_10%,#fff5ed_0%,#eaf2f8_44%,#dff2ff_100%)] p-4 text-[#25324a] md:p-8">
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(96,128,167,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(96,128,167,0.12)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:linear-gradient(to_bottom,transparent,black_48%,black)] opacity-30" />
-      <div className="relative mx-auto max-w-[1182px] rounded-[34px] border border-[#b5c4dd] bg-white/40 p-4 backdrop-blur-2xl shadow-[0_22px_58px_rgba(73,96,132,0.16)] md:p-8">
+      <div className="relative mx-auto max-w-[1210px] rounded-[34px] border border-[#b5c4dd] bg-white/40 p-4 backdrop-blur-2xl shadow-[0_22px_58px_rgba(73,96,132,0.16)] md:p-8">
         <div className="mb-5 flex items-center justify-between">
           <h1 className="text-3xl font-black tracking-tight text-[#303a52]">{t.brand}</h1>
           <button
@@ -1003,14 +1005,6 @@ export default function RegistrationPage() {
 
           {step === 6 ? (
             <div className="space-y-4">
-              <Field label={t.labels.avatar_filter} required error={errors.avatar_filter ? t.errors[errors.avatar_filter] : ''}>
-                <ChoiceGroup
-                  values={Object.keys(t.options.avatar_filter)}
-                  selected={form.avatar_filter}
-                  onChange={(next) => setField('avatar_filter', next as string)}
-                  labels={t.options.avatar_filter}
-                />
-              </Field>
               <Field label={t.labels.contact_info} required error={errors.contact_info ? t.errors[errors.contact_info] : ''}>
                 <input
                   value={form.contact_info}
