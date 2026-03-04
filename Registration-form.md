@@ -14,6 +14,18 @@
 ### 页面顶部欢迎语（需翻译）
 - **中文**：欢迎来到 Spectrum！在开始这段慢揭晓之旅前，请先勾勒一个立体的你。你填写得越用心，未来五天关于你的谜题就越迷人，也越容易遇见真正懂你的人。所有信息都将严格保密，只有匹配成功后，才会以每日线索的形式部分揭示。
 - **英文**：Welcome to Spectrum! Before embarking on this slow-reveal journey, take a moment to sketch a three-dimensional portrait of yourself. The more thoughtfully you fill this out, the more intriguing your mystery clues will be over the next five days—and the easier it will be to meet someone who truly understands you. All information is strictly confidential and will only be partially revealed as daily clues after a successful match.
+---
+
+### 页面模式
+- 注册页同时承担两种模式：  
+  - `注册模式`：`/register`  
+  - `编辑模式`：`/register?mode=edit`（从个人主页“更新资料”进入）  
+- 编辑模式会先读取已有资料并返显；只有点击“提交并创建档案”才会落库，未提交不更新。
+
+---
+### Spectrum Logo
+- 注册模式点击跳转网站主页 /
+- 编辑模式点击跳转匹配界面（个人主页）/
 
 ---
 
@@ -142,6 +154,26 @@
 - **英文**：After submitting, you'll become a member of Spectrum. We'll soon start matching you with like-minded individuals, and every morning at 8:00 (Beijing Time) you'll unlock 3-5 unique clues about them. May you encounter delightful surprises in this slow reveal.
 
 ---
+### “下一步”按钮规则
+- “下一步”按钮始终可点击（仅在提交中态禁用）。  
+- 点击后只校验当前分页字段：  
+  - 有错误：不跳页，定位并滚动到当前页第一个错误字段，显示错误文案  
+  - 无错误：进入下一页
+
+---
+### “提交并创建档案”校验规则  
+- 点击后进行全表单校验。  
+- 若失败：自动切换到首个错误字段所在分页并滚动定位该字段，再展示错误。  
+- 若通过：提交并创建/更新档案，成功后跳转匹配界面 `/`。
+
+---
+### 错误提示时机
+- 首次进入页面不主动显示必填错误。  
+- 不采用 `onBlur` 主动报错。  
+- 仅在“下一步/提交”触发校验后显示错误。  
+- 用户修改字段值后，只清除该字段已有错误，不立即触发新错误。
+
+---
 
 ### 最终实现版 Schema（提交结构）
 
@@ -251,6 +283,10 @@
 - 其他国家不显示省份/城市下拉，仅保存国家代码。
 
 ---
+### 草稿与编辑模式优先级
+- 注册模式：启用 localStorage 草稿恢复/自动保存。  
+- 编辑模式：优先加载服务端资料返显（不使用本地草稿覆盖）。
+---
 
 ### 注意事项
 - 表单提交时，所有字段值应使用上述键值（如 `gender: "male"`）。
@@ -260,3 +296,4 @@
 - 所有 UI 展示文本（模块描述、选项文案、提示）均需纳入翻译。
 - `photos` 需在前后端同时校验格式与大小（JPG/PNG/HEIC，单张 <=10MB），并支持拖拽排序、预览与删除。
 - 前端交互需保证分步引导、错误提示、草稿防丢、移动端适配、步骤切换平滑动画与提交后的完成反馈。
+- 文件统一 UTF-8 编码

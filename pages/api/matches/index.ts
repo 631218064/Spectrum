@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const quota = await getQuotaInfo(user.id);
     const nowIso = new Date().toISOString();
 
-    const [notificationsResp, matchesResp] = await Promise.all([
+    const [notificationsResp, matchesResp, meResp] = await Promise.all([
       supabaseAdmin
         .from('match_requests')
         .select('id,created_at,expires_at,from_user_id,to_user_id,fromUser:profiles!match_requests_from_user_id_fkey(id,nickname,username,profile_photo_url,photos)')
@@ -53,10 +53,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
         .eq('status', 'active')
         .order('created_at', { ascending: false }),
+      supabaseAdmin.from('profiles').select('id,nickname,username,profile_photo_url,photos').eq('id', user.id).maybeSingle(),
     ]);
 
     if (notificationsResp.error) throw notificationsResp.error;
     if (matchesResp.error) throw matchesResp.error;
+    if (meResp.error) throw meResp.error;
 
     const notifications = (notificationsResp.data || []).map((item: any) => ({
       id: item.id,
@@ -76,6 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const photos = parseMaybeJson(otherUser?.photos) || [];
       return {
         id: match.id,
+        isDeductedSide: isUser1,
         current_day: Number(match.current_day || 1),
         created_at: createdAt,
         trial_ends_at: getSecondBeijingEightAfter(createdAt),
@@ -102,6 +105,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({
       serverTime,
       quota,
+      me: {
+        id: meResp.data?.id || user.id,
+        nickname: toName(meResp.data),
+        profile_photo_url: meResp.data?.profile_photo_url || parseMaybeJson(meResp.data?.photos)?.[0] || '',
+        photos: parseMaybeJson(meResp.data?.photos) || [],
+      },
       notifications,
       matches,
     });

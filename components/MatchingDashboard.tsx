@@ -59,6 +59,7 @@ interface NotificationItem {
 
 interface MatchItem {
   id: string;
+  isDeductedSide: boolean;
   current_day: number;
   created_at: string;
   trial_ends_at: string;
@@ -92,6 +93,12 @@ interface MessageItem {
 interface DashboardPayload {
   serverTime: string;
   quota: QuotaInfo;
+  me?: {
+    id: string;
+    nickname: string;
+    profile_photo_url?: string;
+    photos?: string[];
+  };
   notifications: NotificationItem[];
   matches: MatchItem[];
 }
@@ -302,9 +309,14 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
 
   const terminateMatch = async () => {
     if (!selectedMatch || !data?.quota) return;
+    const confirmContent = !selectedMatch.isDeductedSide
+      ? t.confirmTerminateTrip
+      : selectedMatch.isInTrialPeriod
+      ? t.endingTrial
+      : t.endingNormal(data.quota.remaining);
     Modal.confirm({
       title: t.endMatch,
-      content: selectedMatch.isInTrialPeriod ? t.endingTrial : t.endingNormal(data.quota.remaining),
+      content: confirmContent,
       okText: t.endMatch,
       cancelText: t.cancel,
       okButtonProps: { danger: true },
@@ -393,9 +405,18 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
                   <Button shape="circle" icon={<BellOutlined />} onClick={() => setNotifOpen(true)} />
                 </Badge>
                 <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
-                  <Button shape="round" icon={<Avatar size={22} icon={<UserOutlined />} />}>
+                  <Button
+                    shape="round"
+                    icon={
+                      <Avatar
+                        size={22}
+                        src={data?.me?.photos?.[0] || data?.me?.profile_photo_url || undefined}
+                        icon={<UserOutlined />}
+                      />
+                    }
+                  >
                     <span className="inline-flex items-center gap-2">
-                      {t.account}
+                      {data?.me?.nickname || t.account}
                       <DownOutlined />
                     </span>
                   </Button>
