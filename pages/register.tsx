@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { GlobalOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -11,8 +11,6 @@ import Upload from 'antd/lib/upload';
 import type { UploadFile, UploadProps } from 'antd/lib/upload/interface';
 import {
   emptyRegistrationFormData,
-  isAdultInBeijing,
-  isPastDateInBeijing,
   PHOTO_ALLOWED_MIME_TYPES,
   PHOTO_MAX_BYTES,
   PHOTOS_MAX_COUNT,
@@ -205,7 +203,6 @@ export default function RegistrationPage() {
   const [draggingUid, setDraggingUid] = useState<string | null>(null);
   const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [tip, setTip] = useState('');
-  const latestBirthdayRef = useRef(form.birthday);
 
   const t = registrationTranslations[lang];
   const isEditMode = router.query.mode === 'edit';
@@ -295,10 +292,6 @@ export default function RegistrationPage() {
   }, [form, t.savedDraft]);
 
   useEffect(() => {
-    latestBirthdayRef.current = form.birthday;
-  }, [form.birthday]);
-
-  useEffect(() => {
     // 鑽夌鎭㈠鏃讹紝灏嗗凡淇濆瓨鐨?URL 鏄犲皠涓?Upload 鐨?fileList銆?
     if (fileList.length === 0 && form.photos.length > 0) {
       setFileList(
@@ -316,20 +309,18 @@ export default function RegistrationPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const validateBirthdayNow = (value: string) => {
-    if (!value) {
-      setErrors((prev) => ({ ...prev, birthday: 'required' }));
-      return;
-    }
-    if (!isPastDateInBeijing(value)) {
-      setErrors((prev) => ({ ...prev, birthday: 'past_date' }));
-      return;
-    }
-    if (!isAdultInBeijing(value)) {
-      setErrors((prev) => ({ ...prev, birthday: 'adult_only' }));
-      return;
-    }
-    setErrors((prev) => ({ ...prev, birthday: '' }));
+  const clearFieldErrors = (keys: string[]) => {
+    setErrors((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const key of keys) {
+        if (next[key]) {
+          next[key] = '';
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
   };
 
   const syncPhotosToForm = (nextFileList: UploadFile[]) => {
@@ -395,15 +386,11 @@ export default function RegistrationPage() {
     return payload;
   };
 
-  const validateFieldNow = (keys: string[], draftForm?: RegistrationFormData) => {
-    const result = validateRegistrationForm(sanitizePayload(draftForm ?? form));
-    setErrors((prev) => {
-      const next = { ...prev };
-      for (const key of keys) {
-        next[key] = result.errors[key] || '';
-      }
-      return next;
-    });
+  const scrollToField = (fieldKey: string) => {
+    const target = document.getElementById(`field-${fieldKey}`);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
   const findFirstErrorKey = (errorMap: Record<string, string>) => {
@@ -488,9 +475,13 @@ export default function RegistrationPage() {
     return ['contact_info', 'agree_terms'];
   };
 
-  const fullValidation = useMemo(() => validateRegistrationForm(sanitizePayload(form)), [form]);
-  const currentStepKeys = useMemo(() => getStepKeys(step, form), [step, form]);
-  const canGoNext = currentStepKeys.every((key) => !fullValidation.errors[key]);
+  const findErrorStep = (errorMap: Record<string, string>, currentForm: RegistrationFormData) => {
+    for (let s = 0; s <= 6; s += 1) {
+      const keys = getStepKeys(s, currentForm);
+      if (keys.some((key) => Boolean(errorMap[key]))) return s;
+    }
+    return step;
+  };
 
   const submit = async () => {
     setSubmitState('submitting');
@@ -526,10 +517,9 @@ export default function RegistrationPage() {
         setErrors(result.errors);
         const firstKey = findFirstErrorKey(result.errors);
         if (firstKey) {
-          const target = document.getElementById(`field-${firstKey}`);
-          if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
+          const targetStep = findErrorStep(result.errors, payload);
+          setStep(targetStep);
+          setTimeout(() => scrollToField(firstKey), 0);
         }
         setSubmitState('error');
         return;
@@ -565,10 +555,26 @@ export default function RegistrationPage() {
   };
 
   const validateAndNext = () => {
-    setErrors(fullValidation.errors);
-    if (step < 6 && canGoNext) {
-      setStep((prev) => prev + 1);
+    const payload = sanitizePayload(form);
+    const result = validateRegistrationForm(payload);
+    const stepKeys = getStepKeys(step, payload);
+    const nextErrors: Record<string, string> = {};
+    for (const key of stepKeys) {
+      if (result.errors[key]) nextErrors[key] = result.errors[key];
     }
+    setErrors((prev) => {
+      const merged = { ...prev };
+      for (const key of stepKeys) merged[key] = '';
+      return { ...merged, ...nextErrors };
+    });
+
+    const firstStepErrorKey = stepKeys.find((key) => Boolean(result.errors[key]));
+    if (firstStepErrorKey) {
+      scrollToField(firstStepErrorKey === 'location_province' || firstStepErrorKey === 'location_city' ? 'location' : firstStepErrorKey);
+      return;
+    }
+
+    if (step < 6) setStep((prev) => prev + 1);
   };
 
   return (
@@ -666,8 +672,10 @@ export default function RegistrationPage() {
                   className="form-input-ant w-full"
                   style={{ width: '100%' }}
                   value={form.nickname}
-                  onChange={(e) => setField('nickname', e.target.value)}
-                  onBlur={() => validateFieldNow(['nickname'])}
+                  onChange={(e) => {
+                    setField('nickname', e.target.value);
+                    clearFieldErrors(['nickname']);
+                  }}
                   maxLength={20}
                   placeholder={lang === 'zh' ? '请输入' : 'Please input'}
                 />
@@ -679,11 +687,9 @@ export default function RegistrationPage() {
                   placeholder={lang === 'zh' ? '请选择' : 'Please select'}
                   onChange={(value) => {
                     const nextValue = value ? value.format('YYYY-MM-DD') : '';
-                    latestBirthdayRef.current = nextValue;
                     setField('birthday', nextValue);
-                    validateBirthdayNow(nextValue);
+                    clearFieldErrors(['birthday']);
                   }}
-                  onBlur={() => validateBirthdayNow(latestBirthdayRef.current)}
                   style={{ width: '100%', height: 42, borderRadius: 12 }}
                   className="border-[#cad7ea] bg-white outline-none ring-[#97c1ff] focus:ring"
                   allowClear
@@ -697,7 +703,7 @@ export default function RegistrationPage() {
                   onChange={(next) => {
                     const nextForm = { ...form, gender: next as string };
                     setForm(nextForm);
-                    validateFieldNow(['gender'], nextForm);
+                    clearFieldErrors(['gender']);
                   }}
                   labels={t.options.gender}
                   containerClassName="grid w-full grid-cols-2 md:grid-cols-4"
@@ -712,7 +718,7 @@ export default function RegistrationPage() {
                   onChange={(next) => {
                     const nextForm = { ...form, sexual_orientation: next as string };
                     setForm(nextForm);
-                    validateFieldNow(['sexual_orientation'], nextForm);
+                    clearFieldErrors(['sexual_orientation']);
                   }}
                   labels={t.options.sexual_orientation}
                 />
@@ -750,9 +756,8 @@ export default function RegistrationPage() {
                         : { country: countryCode };
                     const nextForm = { ...form, location: nextLocation };
                     setForm(nextForm);
-                    validateFieldNow(['location', 'location_province', 'location_city'], nextForm);
+                    clearFieldErrors(['location', 'location_province', 'location_city']);
                   }}
-                  onBlur={() => validateFieldNow(['location', 'location_province', 'location_city'])}
                 />
               </Field>
 
@@ -762,8 +767,10 @@ export default function RegistrationPage() {
                   style={{ width: '100%' }}
                   value={form.mbti || undefined}
                   placeholder={lang === 'zh' ? '请选择' : 'Please select'}
-                  onChange={(value) => setField('mbti', value)}
-                  onBlur={() => validateFieldNow(['mbti'])}
+                  onChange={(value) => {
+                    setField('mbti', value);
+                    clearFieldErrors(['mbti']);
+                  }}
                   options={MBTI_VALUES.map((item) => ({
                     value: item,
                     label: item === 'unknown' ? t.options.mbti.unknown : item,
@@ -777,8 +784,10 @@ export default function RegistrationPage() {
                   style={{ width: '100%' }}
                   value={form.zodiac || undefined}
                   placeholder={lang === 'zh' ? '请选择' : 'Please select'}
-                  onChange={(value) => setField('zodiac', value)}
-                  onBlur={() => validateFieldNow(['zodiac'])}
+                  onChange={(value) => {
+                    setField('zodiac', value);
+                    clearFieldErrors(['zodiac']);
+                  }}
                   options={ZODIAC_VALUES.map((item) => ({
                     value: item,
                     label: t.options.zodiac[item],
@@ -793,7 +802,7 @@ export default function RegistrationPage() {
                   onChange={(next) => {
                     const nextForm = { ...form, growth_environment: next as string };
                     setForm(nextForm);
-                    validateFieldNow(['growth_environment'], nextForm);
+                    clearFieldErrors(['growth_environment']);
                   }}
                   labels={t.options.growth_environment}
                   containerClassName="grid w-full grid-cols-2 md:grid-cols-4"
@@ -807,8 +816,10 @@ export default function RegistrationPage() {
                   style={{ width: '100%' }}
                   value={form.financial_status || undefined}
                   placeholder={lang === 'zh' ? '请选择' : 'Please select'}
-                  onChange={(value) => setField('financial_status', value)}
-                  onBlur={() => validateFieldNow(['financial_status'])}
+                  onChange={(value) => {
+                    setField('financial_status', value);
+                    clearFieldErrors(['financial_status']);
+                  }}
                   options={Object.keys(t.options.financial_status).map((item) => ({
                     value: item,
                     label: t.options.financial_status[item],
@@ -822,8 +833,10 @@ export default function RegistrationPage() {
                   style={{ width: '100%' }}
                   value={form.education || undefined}
                   placeholder={lang === 'zh' ? '请选择' : 'Please select'}
-                  onChange={(value) => setField('education', value)}
-                  onBlur={() => validateFieldNow(['education'])}
+                  onChange={(value) => {
+                    setField('education', value);
+                    clearFieldErrors(['education']);
+                  }}
                   options={Object.keys(t.options.education).map((item) => ({
                     value: item,
                     label: t.options.education[item],
@@ -839,7 +852,7 @@ export default function RegistrationPage() {
                     onChange={(next) => {
                       const nextForm = { ...form, pet_preference: next as string };
                       setForm(nextForm);
-                      validateFieldNow(['pet_preference'], nextForm);
+                      clearFieldErrors(['pet_preference']);
                     }}
                     labels={t.options.pet_preference}
                     noWrap
@@ -863,7 +876,7 @@ export default function RegistrationPage() {
                             const next = selected ? form.hobbies.filter((item) => item !== value) : [...form.hobbies, value];
                             const nextForm = { ...form, hobbies: next };
                             setForm(nextForm);
-                            validateFieldNow(['hobbies', 'hobbies_custom'], nextForm);
+                            clearFieldErrors(['hobbies', 'hobbies_custom']);
                           }}
                           className={cn(
                             'flex items-center gap-2 rounded-xl border px-3 py-2 text-left transition',
@@ -882,8 +895,10 @@ export default function RegistrationPage() {
                   <Field fieldKey="hobbies_custom" label={t.labels.hobbies_custom} required error={errors.hobbies_custom ? t.errors[errors.hobbies_custom] : ''}>
                     <input
                       value={form.hobbies_custom}
-                      onChange={(e) => setField('hobbies_custom', e.target.value)}
-                      onBlur={() => validateFieldNow(['hobbies_custom'])}
+                      onChange={(e) => {
+                        setField('hobbies_custom', e.target.value);
+                        clearFieldErrors(['hobbies_custom']);
+                      }}
                       placeholder={t.placeholders.hobbies_custom}
                       className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                     />
@@ -899,7 +914,10 @@ export default function RegistrationPage() {
                 <ChoiceGroup
                   values={Object.keys(t.options.sound_preference)}
                   selected={form.sound_preference}
-                  onChange={(next) => setField('sound_preference', next as string)}
+                  onChange={(next) => {
+                    setField('sound_preference', next as string);
+                    clearFieldErrors(['sound_preference']);
+                  }}
                   labels={t.options.sound_preference}
                 />
               </Field>
@@ -907,7 +925,10 @@ export default function RegistrationPage() {
                 <ChoiceGroup
                   values={Object.keys(t.options.color_mood)}
                   selected={form.color_mood}
-                  onChange={(next) => setField('color_mood', next as string)}
+                  onChange={(next) => {
+                    setField('color_mood', next as string);
+                    clearFieldErrors(['color_mood', 'color_mood_custom']);
+                  }}
                   labels={t.options.color_mood}
                 />
               </Field>
@@ -915,7 +936,10 @@ export default function RegistrationPage() {
                 <Field label={t.labels.color_mood_custom} required error={errors.color_mood_custom ? t.errors[errors.color_mood_custom] : ''}>
                   <input
                     value={form.color_mood_custom}
-                    onChange={(e) => setField('color_mood_custom', e.target.value)}
+                    onChange={(e) => {
+                      setField('color_mood_custom', e.target.value);
+                      clearFieldErrors(['color_mood_custom']);
+                    }}
                     placeholder={t.placeholders.color_mood_custom}
                     className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                   />
@@ -926,7 +950,10 @@ export default function RegistrationPage() {
                 <ChoiceGroup
                   values={Object.keys(t.options.scent_memory)}
                   selected={form.scent_memory}
-                  onChange={(next) => setField('scent_memory', next as string)}
+                  onChange={(next) => {
+                    setField('scent_memory', next as string);
+                    clearFieldErrors(['scent_memory', 'scent_memory_custom']);
+                  }}
                   labels={t.options.scent_memory}
                 />
               </Field>
@@ -934,7 +961,10 @@ export default function RegistrationPage() {
                 <Field label={t.labels.scent_memory_custom} required error={errors.scent_memory_custom ? t.errors[errors.scent_memory_custom] : ''}>
                   <input
                     value={form.scent_memory_custom}
-                    onChange={(e) => setField('scent_memory_custom', e.target.value)}
+                    onChange={(e) => {
+                      setField('scent_memory_custom', e.target.value);
+                      clearFieldErrors(['scent_memory_custom']);
+                    }}
                     placeholder={t.placeholders.scent_memory_custom}
                     className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                   />
@@ -949,7 +979,10 @@ export default function RegistrationPage() {
                 <ChoiceGroup
                   values={Object.keys(t.options.ritual)}
                   selected={form.ritual}
-                  onChange={(next) => setField('ritual', next as string)}
+                  onChange={(next) => {
+                    setField('ritual', next as string);
+                    clearFieldErrors(['ritual', 'ritual_custom']);
+                  }}
                   labels={t.options.ritual}
                 />
               </Field>
@@ -957,7 +990,10 @@ export default function RegistrationPage() {
                 <Field label={t.labels.ritual_custom} required error={errors.ritual_custom ? t.errors[errors.ritual_custom] : ''}>
                   <input
                     value={form.ritual_custom}
-                    onChange={(e) => setField('ritual_custom', e.target.value)}
+                    onChange={(e) => {
+                      setField('ritual_custom', e.target.value);
+                      clearFieldErrors(['ritual_custom']);
+                    }}
                     placeholder={t.placeholders.ritual_custom}
                     className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                   />
@@ -967,7 +1003,10 @@ export default function RegistrationPage() {
                 <ChoiceGroup
                   values={Object.keys(t.options.food_adventure)}
                   selected={form.food_adventure}
-                  onChange={(next) => setField('food_adventure', next as string)}
+                  onChange={(next) => {
+                    setField('food_adventure', next as string);
+                    clearFieldErrors(['food_adventure']);
+                  }}
                   labels={t.options.food_adventure}
                 />
               </Field>
@@ -979,7 +1018,10 @@ export default function RegistrationPage() {
                 <ChoiceGroup
                   values={Object.keys(t.options.conflict_reaction)}
                   selected={form.conflict_reaction}
-                  onChange={(next) => setField('conflict_reaction', next as string)}
+                  onChange={(next) => {
+                    setField('conflict_reaction', next as string);
+                    clearFieldErrors(['conflict_reaction']);
+                  }}
                   labels={t.options.conflict_reaction}
                 />
               </Field>
@@ -987,7 +1029,10 @@ export default function RegistrationPage() {
                 <ChoiceGroup
                   values={Object.keys(t.options.recharge_style)}
                   selected={form.recharge_style}
-                  onChange={(next) => setField('recharge_style', next as string)}
+                  onChange={(next) => {
+                    setField('recharge_style', next as string);
+                    clearFieldErrors(['recharge_style']);
+                  }}
                   labels={t.options.recharge_style}
                 />
               </Field>
@@ -999,7 +1044,10 @@ export default function RegistrationPage() {
               <Field label={t.labels.mystery_question} required error={errors.mystery_question ? t.errors[errors.mystery_question] : ''}>
                 <input
                   value={form.mystery_question}
-                  onChange={(e) => setField('mystery_question', e.target.value)}
+                  onChange={(e) => {
+                    setField('mystery_question', e.target.value);
+                    clearFieldErrors(['mystery_question']);
+                  }}
                   maxLength={50}
                   placeholder={t.placeholders.mystery_question}
                   className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
@@ -1008,7 +1056,10 @@ export default function RegistrationPage() {
               <Field label={t.labels.mystery_answer} required error={errors.mystery_answer ? t.errors[errors.mystery_answer] : ''}>
                 <textarea
                   value={form.mystery_answer}
-                  onChange={(e) => setField('mystery_answer', e.target.value)}
+                  onChange={(e) => {
+                    setField('mystery_answer', e.target.value);
+                    clearFieldErrors(['mystery_answer']);
+                  }}
                   maxLength={100}
                   placeholder={t.placeholders.mystery_answer}
                   className="min-h-[92px] w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
@@ -1023,7 +1074,10 @@ export default function RegistrationPage() {
                 <ChoiceGroup
                   values={Object.keys(t.options.valued_traits)}
                   selected={form.valued_traits}
-                  onChange={(next) => setField('valued_traits', next as string[])}
+                  onChange={(next) => {
+                    setField('valued_traits', next as string[]);
+                    clearFieldErrors(['valued_traits', 'valued_traits_custom']);
+                  }}
                   labels={t.options.valued_traits}
                   multi
                   max={3}
@@ -1033,7 +1087,10 @@ export default function RegistrationPage() {
                 <Field label={t.labels.valued_traits_custom} required error={errors.valued_traits_custom ? t.errors[errors.valued_traits_custom] : ''}>
                   <input
                     value={form.valued_traits_custom}
-                    onChange={(e) => setField('valued_traits_custom', e.target.value)}
+                    onChange={(e) => {
+                      setField('valued_traits_custom', e.target.value);
+                      clearFieldErrors(['valued_traits_custom']);
+                    }}
                     placeholder={t.placeholders.valued_traits_custom}
                     className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                   />
@@ -1043,7 +1100,10 @@ export default function RegistrationPage() {
                 <ChoiceGroup
                   values={Object.keys(t.options.relationship_goal)}
                   selected={form.relationship_goal}
-                  onChange={(next) => setField('relationship_goal', next as string[])}
+                  onChange={(next) => {
+                    setField('relationship_goal', next as string[]);
+                    clearFieldErrors(['relationship_goal']);
+                  }}
                   labels={t.options.relationship_goal}
                   multi
                   max={2}
@@ -1057,7 +1117,10 @@ export default function RegistrationPage() {
               <Field label={t.labels.contact_info} required error={errors.contact_info ? t.errors[errors.contact_info] : ''}>
                 <input
                   value={form.contact_info}
-                  onChange={(e) => setField('contact_info', e.target.value)}
+                  onChange={(e) => {
+                    setField('contact_info', e.target.value);
+                    clearFieldErrors(['contact_info']);
+                  }}
                   placeholder={t.placeholders.contact_info}
                   className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                 />
@@ -1066,7 +1129,10 @@ export default function RegistrationPage() {
                 <input
                   type="checkbox"
                   checked={form.agree_terms}
-                  onChange={(e) => setField('agree_terms', e.target.checked)}
+                  onChange={(e) => {
+                    setField('agree_terms', e.target.checked);
+                    clearFieldErrors(['agree_terms']);
+                  }}
                   className="mt-0.5 h-4 w-4 rounded border-[#9eb6d5]"
                 />
                 <span>
@@ -1093,7 +1159,7 @@ export default function RegistrationPage() {
               <button
                 type="button"
                 onClick={validateAndNext}
-                disabled={!canGoNext || submitState === 'submitting'}
+                disabled={submitState === 'submitting'}
                 className="rounded-full bg-gradient-to-r from-[#ff9165] via-[#d76cff] to-[#61d7ff] px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
               >
                 {t.next}
@@ -1215,7 +1281,3 @@ export default function RegistrationPage() {
     </div>
   );
 }
-
-
-
-
