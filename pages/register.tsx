@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion';
 import { GlobalOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/router';
 import Cascader from 'antd/lib/cascader';
 import DatePicker from 'antd/lib/date-picker';
 import Input from 'antd/lib/input';
@@ -194,6 +195,7 @@ const HOBBY_ICONS: Record<string, string> = {
 };
 
 export default function RegistrationPage() {
+  const router = useRouter();
   const [lang, setLang] = useState<Language>('zh');
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<RegistrationFormData>(emptyRegistrationFormData());
@@ -206,6 +208,7 @@ export default function RegistrationPage() {
   const latestBirthdayRef = useRef(form.birthday);
 
   const t = registrationTranslations[lang];
+  const isEditMode = router.query.mode === 'edit';
 
   const locationOptions = useMemo(
     () =>
@@ -244,6 +247,7 @@ export default function RegistrationPage() {
   }, []);
 
   useEffect(() => {
+    if (isEditMode) return;
     const raw = window.localStorage.getItem(DRAFT_KEY);
     if (!raw) return;
     try {
@@ -255,7 +259,33 @@ export default function RegistrationPage() {
       window.localStorage.removeItem(DRAFT_KEY);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isEditMode]);
+
+  useEffect(() => {
+    if (!router.isReady || !isEditMode) return;
+
+    const loadProfileForEdit = async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
+        if (!token) return;
+
+        const resp = await fetch('/api/profile', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!resp.ok) return;
+        const body = (await resp.json()) as { form?: RegistrationFormData };
+        if (!body.form) return;
+        setForm(body.form);
+        setTip(lang === 'zh' ? '已加载当前资料，可编辑后提交更新' : 'Current profile loaded. Submit to save changes.');
+      } catch {
+        // ignore
+      }
+    };
+
+    loadProfileForEdit();
+  }, [isEditMode, router.isReady]);
 
   useEffect(() => {
     window.localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
@@ -528,6 +558,7 @@ export default function RegistrationPage() {
 
       setSubmitState('success');
       window.localStorage.removeItem(DRAFT_KEY);
+      router.replace('/');
     } catch {
       setSubmitState('error');
     }

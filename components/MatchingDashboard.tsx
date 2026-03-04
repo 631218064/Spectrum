@@ -24,6 +24,7 @@ import {
   CheckOutlined,
   CloseOutlined,
   DownOutlined,
+  EditOutlined,
   GlobalOutlined,
   LogoutOutlined,
   PlusOutlined,
@@ -334,7 +335,7 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
   };
 
   const menuItems = [
-    { key: 'profile', label: t.profile, onClick: () => router.push('/profile/edit') },
+    { key: 'profile', icon: <EditOutlined />, label: t.profile, onClick: () => router.push('/register?mode=edit') },
     { key: 'lang', icon: <GlobalOutlined />, label: lang === 'zh' ? 'EN' : '中文', onClick: onToggleLang },
     { key: 'logout', icon: <LogoutOutlined />, label: t.signout, onClick: signOut },
   ];
