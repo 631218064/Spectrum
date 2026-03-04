@@ -4,7 +4,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { uploadProfilePhoto } from '@/lib/storage';
-import formidable from 'formidable';
+import formidable, { type Fields, type Files } from 'formidable';
 import fs from 'fs';
 
 export const config = {
@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
 
   const form = formidable({ multiples: false });
-  form.parse(req, async (err, fields, files) => {
+  form.parse(req, async (err: Error | null, _fields: Fields, files: Files) => {
     if (err) {
       return res.status(500).json({ error: 'Upload parse error' });
     }

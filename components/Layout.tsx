@@ -4,6 +4,7 @@
 import React from 'react';
 import { useSession } from '@/hooks/useSession';
 import { useTranslation } from '@/hooks/useTranslation';
+import { supabase } from '@/lib/supabase';
 import LanguageToggle from './LanguageToggle';
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';

@@ -1,25 +1,26 @@
-// pages/_app.tsx
-// 全局组件，包裹所有页面，提供 Supabase 会话管理、全局样式等
+﻿// pages/_app.tsx
+// 鍏ㄥ眬缁勪欢锛屽寘瑁规墍鏈夐〉闈紝鎻愪緵 Supabase 浼氳瘽绠＄悊銆佸叏灞€鏍峰紡绛?
 
-import '@/styles/globals.css'; // 导入全局样式（需确保路径正确）
+import '@/styles/globals.css'; // 瀵煎叆鍏ㄥ眬鏍峰紡锛堥渶纭繚璺緞姝ｇ‘锛?
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { AppProps } from 'next/app';
+import type { Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/router';
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 获取初始会话
+    // 鑾峰彇鍒濆浼氳瘽
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // 监听认证状态变化
+    // 鐩戝惉璁よ瘉鐘舵€佸彉鍖?
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -27,7 +28,7 @@ export default function App({ Component, pageProps }: AppProps) {
     return () => listener?.subscription.unsubscribe();
   }, []);
 
-  // 如果正在加载，可以显示一个全局加载动画（可选）
+  // 濡傛灉姝ｅ湪鍔犺浇锛屽彲浠ユ樉绀轰竴涓叏灞€鍔犺浇鍔ㄧ敾锛堝彲閫夛級
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
@@ -36,6 +37,6 @@ export default function App({ Component, pageProps }: AppProps) {
     );
   }
 
-  // 将 session 通过 pageProps 传递给页面组件（也可用 context）
+  // 灏?session 閫氳繃 pageProps 浼犻€掔粰椤甸潰缁勪欢锛堜篃鍙敤 context锛?
   return <Component {...pageProps} session={session} />;
 }

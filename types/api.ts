@@ -1,7 +1,8 @@
+﻿import type { MatchCard } from './match';
 // types/api.ts
-// API 请求和响应的通用类型
+// API 璇锋眰鍜屽搷搴旂殑閫氱敤绫诲瀷
 
-// 通用 API 响应格式
+// 閫氱敤 API 鍝嶅簲鏍煎紡
 export interface ApiResponse<T = any> {
   success?: boolean;
   data?: T;
@@ -9,13 +10,13 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
-// 分页参数（如果将来需要分页）
+// 鍒嗛〉鍙傛暟锛堝鏋滃皢鏉ラ渶瑕佸垎椤碉級
 export interface PaginationParams {
   page?: number;
   limit?: number;
 }
 
-// 分页响应
+// 鍒嗛〉鍝嶅簲
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;
@@ -24,21 +25,21 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-// 匹配列表响应（直接返回 MatchCard[]）
+// 鍖归厤鍒楄〃鍝嶅簲锛堢洿鎺ヨ繑鍥?MatchCard[]锛?
 export type MatchesResponse = MatchCard[];
 
-// 匹配请求响应（创建请求后）
+// 鍖归厤璇锋眰鍝嶅簲锛堝垱寤鸿姹傚悗锛?
 export interface MatchRequestResponse {
   status: 'pending' | 'matched';
   matchId?: string;
 }
 
-// 上传图片响应
+// 涓婁紶鍥剧墖鍝嶅簲
 export interface UploadResponse {
   url: string;
 }
 
-// 每日消息发送响应
+// 姣忔棩娑堟伅鍙戦€佸搷搴?
 export interface SendMessageResponse {
   success: boolean;
 }
