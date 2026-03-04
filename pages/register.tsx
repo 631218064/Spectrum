@@ -206,6 +206,13 @@ export default function RegistrationPage() {
 
   const t = registrationTranslations[lang];
   const isEditMode = router.query.mode === 'edit';
+  const handleLogoClick = () => {
+    if (isEditMode) {
+      router.push('/');
+      return;
+    }
+    router.push('/');
+  };
 
   const locationOptions = useMemo(
     () =>
@@ -582,7 +589,14 @@ export default function RegistrationPage() {
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(96,128,167,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(96,128,167,0.12)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:linear-gradient(to_bottom,transparent,black_48%,black)] opacity-30" />
       <div className="relative mx-auto max-w-[1210px] rounded-[34px] border border-[#b5c4dd] bg-white/40 p-4 backdrop-blur-2xl shadow-[0_22px_58px_rgba(73,96,132,0.16)] md:p-8">
         <div className="mb-5 flex items-center justify-between">
-          <h1 className="text-3xl font-black tracking-tight text-[#303a52]">{t.brand}</h1>
+          <button
+            type="button"
+            onClick={handleLogoClick}
+            className="text-3xl font-black tracking-tight text-[#303a52]"
+            aria-label="Spectrum"
+          >
+            {t.brand}
+          </button>
           <button
             type="button"
             onClick={() => setLang((prev) => (prev === 'zh' ? 'en' : 'zh'))}
@@ -596,7 +610,7 @@ export default function RegistrationPage() {
         <p className="mb-5 max-w-4xl text-sm leading-relaxed text-[#3a4662] md:text-[15px]">{t.welcome}</p>
 
         <div className="mb-6">
-          <Field label={t.labels.photos} required error={errors.photos ? t.errors[errors.photos] || errors.photos : ''}>
+          <Field fieldKey="photos" label={t.labels.photos} required error={errors.photos ? t.errors[errors.photos] || errors.photos : ''}>
             <div className="photo-wall">
               <Upload
                 accept=".jpg,.jpeg,.png,.heic,.heif,image/jpeg,image/png,image/heic,image/heif"
@@ -910,7 +924,7 @@ export default function RegistrationPage() {
 
           {step === 1 ? (
             <div className="space-y-4">
-              <Field label={t.labels.sound_preference} required error={errors.sound_preference ? t.errors[errors.sound_preference] : ''}>
+              <Field fieldKey="sound_preference" label={t.labels.sound_preference} required error={errors.sound_preference ? t.errors[errors.sound_preference] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.sound_preference)}
                   selected={form.sound_preference}
@@ -921,7 +935,7 @@ export default function RegistrationPage() {
                   labels={t.options.sound_preference}
                 />
               </Field>
-              <Field label={t.labels.color_mood} required error={errors.color_mood ? t.errors[errors.color_mood] : ''}>
+              <Field fieldKey="color_mood" label={t.labels.color_mood} required error={errors.color_mood ? t.errors[errors.color_mood] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.color_mood)}
                   selected={form.color_mood}
@@ -933,7 +947,7 @@ export default function RegistrationPage() {
                 />
               </Field>
               {form.color_mood === 'custom' ? (
-                <Field label={t.labels.color_mood_custom} required error={errors.color_mood_custom ? t.errors[errors.color_mood_custom] : ''}>
+                <Field fieldKey="color_mood_custom" label={t.labels.color_mood_custom} required error={errors.color_mood_custom ? t.errors[errors.color_mood_custom] : ''}>
                   <input
                     value={form.color_mood_custom}
                     onChange={(e) => {
@@ -946,7 +960,7 @@ export default function RegistrationPage() {
                 </Field>
               ) : null}
 
-              <Field label={t.labels.scent_memory} required error={errors.scent_memory ? t.errors[errors.scent_memory] : ''}>
+              <Field fieldKey="scent_memory" label={t.labels.scent_memory} required error={errors.scent_memory ? t.errors[errors.scent_memory] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.scent_memory)}
                   selected={form.scent_memory}
@@ -958,7 +972,7 @@ export default function RegistrationPage() {
                 />
               </Field>
               {form.scent_memory === 'custom' ? (
-                <Field label={t.labels.scent_memory_custom} required error={errors.scent_memory_custom ? t.errors[errors.scent_memory_custom] : ''}>
+                <Field fieldKey="scent_memory_custom" label={t.labels.scent_memory_custom} required error={errors.scent_memory_custom ? t.errors[errors.scent_memory_custom] : ''}>
                   <input
                     value={form.scent_memory_custom}
                     onChange={(e) => {
@@ -975,7 +989,7 @@ export default function RegistrationPage() {
 
           {step === 2 ? (
             <div className="space-y-4">
-              <Field label={t.labels.ritual} required error={errors.ritual ? t.errors[errors.ritual] : ''}>
+              <Field fieldKey="ritual" label={t.labels.ritual} required error={errors.ritual ? t.errors[errors.ritual] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.ritual)}
                   selected={form.ritual}
@@ -987,7 +1001,7 @@ export default function RegistrationPage() {
                 />
               </Field>
               {form.ritual === 'custom' ? (
-                <Field label={t.labels.ritual_custom} required error={errors.ritual_custom ? t.errors[errors.ritual_custom] : ''}>
+                <Field fieldKey="ritual_custom" label={t.labels.ritual_custom} required error={errors.ritual_custom ? t.errors[errors.ritual_custom] : ''}>
                   <input
                     value={form.ritual_custom}
                     onChange={(e) => {
@@ -999,7 +1013,7 @@ export default function RegistrationPage() {
                   />
                 </Field>
               ) : null}
-              <Field label={t.labels.food_adventure} required error={errors.food_adventure ? t.errors[errors.food_adventure] : ''}>
+              <Field fieldKey="food_adventure" label={t.labels.food_adventure} required error={errors.food_adventure ? t.errors[errors.food_adventure] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.food_adventure)}
                   selected={form.food_adventure}
@@ -1014,7 +1028,7 @@ export default function RegistrationPage() {
           ) : null}
           {step === 3 ? (
             <div className="space-y-4">
-              <Field label={t.labels.conflict_reaction} required error={errors.conflict_reaction ? t.errors[errors.conflict_reaction] : ''}>
+              <Field fieldKey="conflict_reaction" label={t.labels.conflict_reaction} required error={errors.conflict_reaction ? t.errors[errors.conflict_reaction] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.conflict_reaction)}
                   selected={form.conflict_reaction}
@@ -1025,7 +1039,7 @@ export default function RegistrationPage() {
                   labels={t.options.conflict_reaction}
                 />
               </Field>
-              <Field label={t.labels.recharge_style} required error={errors.recharge_style ? t.errors[errors.recharge_style] : ''}>
+              <Field fieldKey="recharge_style" label={t.labels.recharge_style} required error={errors.recharge_style ? t.errors[errors.recharge_style] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.recharge_style)}
                   selected={form.recharge_style}
@@ -1041,7 +1055,7 @@ export default function RegistrationPage() {
 
           {step === 4 ? (
             <div className="space-y-4">
-              <Field label={t.labels.mystery_question} required error={errors.mystery_question ? t.errors[errors.mystery_question] : ''}>
+              <Field fieldKey="mystery_question" label={t.labels.mystery_question} required error={errors.mystery_question ? t.errors[errors.mystery_question] : ''}>
                 <input
                   value={form.mystery_question}
                   onChange={(e) => {
@@ -1053,7 +1067,7 @@ export default function RegistrationPage() {
                   className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                 />
               </Field>
-              <Field label={t.labels.mystery_answer} required error={errors.mystery_answer ? t.errors[errors.mystery_answer] : ''}>
+              <Field fieldKey="mystery_answer" label={t.labels.mystery_answer} required error={errors.mystery_answer ? t.errors[errors.mystery_answer] : ''}>
                 <textarea
                   value={form.mystery_answer}
                   onChange={(e) => {
@@ -1070,7 +1084,7 @@ export default function RegistrationPage() {
 
           {step === 5 ? (
             <div className="space-y-4">
-              <Field label={t.labels.valued_traits} required error={errors.valued_traits ? t.errors[errors.valued_traits] : ''}>
+              <Field fieldKey="valued_traits" label={t.labels.valued_traits} required error={errors.valued_traits ? t.errors[errors.valued_traits] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.valued_traits)}
                   selected={form.valued_traits}
@@ -1084,7 +1098,7 @@ export default function RegistrationPage() {
                 />
               </Field>
               {form.valued_traits.includes('custom') ? (
-                <Field label={t.labels.valued_traits_custom} required error={errors.valued_traits_custom ? t.errors[errors.valued_traits_custom] : ''}>
+                <Field fieldKey="valued_traits_custom" label={t.labels.valued_traits_custom} required error={errors.valued_traits_custom ? t.errors[errors.valued_traits_custom] : ''}>
                   <input
                     value={form.valued_traits_custom}
                     onChange={(e) => {
@@ -1096,7 +1110,7 @@ export default function RegistrationPage() {
                   />
                 </Field>
               ) : null}
-              <Field label={t.labels.relationship_goal} required error={errors.relationship_goal ? t.errors[errors.relationship_goal] : ''}>
+              <Field fieldKey="relationship_goal" label={t.labels.relationship_goal} required error={errors.relationship_goal ? t.errors[errors.relationship_goal] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.relationship_goal)}
                   selected={form.relationship_goal}
@@ -1114,7 +1128,7 @@ export default function RegistrationPage() {
 
           {step === 6 ? (
             <div className="space-y-4">
-              <Field label={t.labels.contact_info} required error={errors.contact_info ? t.errors[errors.contact_info] : ''}>
+              <Field fieldKey="contact_info" label={t.labels.contact_info} required error={errors.contact_info ? t.errors[errors.contact_info] : ''}>
                 <input
                   value={form.contact_info}
                   onChange={(e) => {
@@ -1125,20 +1139,22 @@ export default function RegistrationPage() {
                   className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
                 />
               </Field>
-              <label className="flex items-start gap-2 rounded-xl border border-[#cad7ea] bg-white/65 p-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={form.agree_terms}
-                  onChange={(e) => {
-                    setField('agree_terms', e.target.checked);
-                    clearFieldErrors(['agree_terms']);
-                  }}
-                  className="mt-0.5 h-4 w-4 rounded border-[#9eb6d5]"
-                />
-                <span>
-                  {t.termsPrefix} {t.termsUser} {t.termsAnd} {t.termsPrivacy}
-                </span>
-              </label>
+              <div id="field-agree_terms">
+                <label className="flex items-start gap-2 rounded-xl border border-[#cad7ea] bg-white/65 p-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.agree_terms}
+                    onChange={(e) => {
+                      setField('agree_terms', e.target.checked);
+                      clearFieldErrors(['agree_terms']);
+                    }}
+                    className="mt-0.5 h-4 w-4 rounded border-[#9eb6d5]"
+                  />
+                  <span>
+                    {t.termsPrefix} {t.termsUser} {t.termsAnd} {t.termsPrivacy}
+                  </span>
+                </label>
+              </div>
               {errors.agree_terms ? <p className="text-xs text-[#d94c7a]">{t.errors.required}</p> : null}
             </div>
           ) : null}
