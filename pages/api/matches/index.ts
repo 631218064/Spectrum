@@ -18,6 +18,26 @@ function toName(profile: any) {
   return profile?.nickname || profile?.username || 'User';
 }
 
+function resolveViewerClues(raw: any, viewerId: string, user1Id: string, user2Id: string): string[] {
+  const parsed = parseMaybeJson(raw);
+  if (Array.isArray(parsed)) return parsed;
+  if (!parsed || typeof parsed !== 'object') return [];
+
+  const byViewer = parsed[viewerId];
+  if (Array.isArray(byViewer)) return byViewer;
+
+  // Backward/compat keys if present in historical data.
+  if (viewerId === user1Id) {
+    if (Array.isArray(parsed.user1)) return parsed.user1;
+    if (Array.isArray(parsed.for_user1)) return parsed.for_user1;
+  }
+  if (viewerId === user2Id) {
+    if (Array.isArray(parsed.user2)) return parsed.user2;
+    if (Array.isArray(parsed.for_user2)) return parsed.for_user2;
+  }
+  return [];
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -85,10 +105,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         isInTrialPeriod: isInTrialPeriod(createdAt, serverTime),
         next_unlock_at: match.next_unlock_at || getNextUnlockAt(serverTime),
         match_source: match.match_source || 'invite',
-        day1_clues: parseMaybeJson(match.day1_clues) || [],
-        day2_clues: parseMaybeJson(match.day2_clues) || [],
-        day3_clues: parseMaybeJson(match.day3_clues) || [],
-        day4_clues: parseMaybeJson(match.day4_clues) || [],
+        day1_clues: resolveViewerClues(match.day1_clues, user.id, match.user1_id, match.user2_id),
+        day2_clues: resolveViewerClues(match.day2_clues, user.id, match.user1_id, match.user2_id),
+        day3_clues: resolveViewerClues(match.day3_clues, user.id, match.user1_id, match.user2_id),
+        day4_clues: resolveViewerClues(match.day4_clues, user.id, match.user1_id, match.user2_id),
         day5_unlocked_at: match.day5_unlocked_at || null,
         otherUser: {
           id: otherUser?.id || '',

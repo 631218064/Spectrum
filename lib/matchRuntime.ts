@@ -130,28 +130,97 @@ export async function refundQuotaUsage(userId: string) {
   if (updateError) throw updateError;
 }
 
+function parseMaybeJson(value: any) {
+  if (value == null) return null;
+  if (typeof value === 'object') return value;
+  if (typeof value !== 'string') return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function asStringArray(value: any): string[] {
+  if (Array.isArray(value)) return value.filter((item) => typeof item === 'string');
+  const parsed = parseMaybeJson(value);
+  if (Array.isArray(parsed)) return parsed.filter((item) => typeof item === 'string');
+  return [];
+}
+
 function toAiProfile(input: any): UserProfile {
+  const location = parseMaybeJson(input.location);
+  const hobbies = asStringArray(input.hobbies || input.interests);
+  const valuedTraits = asStringArray(input.valued_traits);
+  const relationshipGoal = asStringArray(input.relationship_goal);
+  const photos = asStringArray(input.photos);
+
   return {
     id: input.id,
+    nickname: input.nickname || input.username || '',
+    birthday: input.birthday || '',
+    gender: input.gender || '',
+    sexual_orientation: input.sexual_orientation || '',
+    location: {
+      country: location?.country || input.country || '',
+      province: location?.province || input.province || '',
+      city: location?.city || input.city || '',
+    },
     mbti: input.mbti,
     zodiac: input.zodiac,
+    growth_environment: input.growth_environment || '',
+    financial_status: input.financial_status || '',
+    education: input.education || '',
+    pet_preference: input.pet_preference || input.pet || '',
+    hobbies,
+    hobbies_custom: input.hobbies_custom || '',
+    sound_preference: input.sound_preference || '',
+    color_mood: input.color_mood || '',
+    color_mood_custom: input.color_mood_custom || '',
+    scent_memory: input.scent_memory || '',
+    scent_memory_custom: input.scent_memory_custom || '',
+    ritual: input.ritual || '',
+    ritual_custom: input.ritual_custom || '',
+    food_adventure: input.food_adventure || '',
+    conflict_reaction: input.conflict_reaction || '',
+    recharge_style: input.recharge_style || '',
+    mystery_question: input.mystery_question || '',
+    mystery_answer: input.mystery_answer || '',
+    valued_traits: valuedTraits,
+    valued_traits_custom: input.valued_traits_custom || '',
+    relationship_goal: relationshipGoal,
+    photos,
+    contact_info: input.contact_info || input.preferred_contact || '',
+
+    // Keep compatibility for template fallback.
     pet: input.pet_preference || input.pet,
-    interests: input.hobbies || input.interests || [],
+    interests: hobbies,
     love_views: input.love_views,
     favorite_quote: input.favorite_quote,
-    ideal_type_tags: input.ideal_type_tags || [],
+    ideal_type_tags: asStringArray(input.ideal_type_tags),
+  };
+}
+
+function buildPerUserClues(userAId: string, userBId: string, cluesForA: string[], cluesForB: string[]) {
+  return {
+    [userAId]: cluesForA,
+    [userBId]: cluesForB,
   };
 }
 
 export async function generateCluesForMatch(matchId: string, userA: any, userB: any) {
-  const clues = await generateDailyClues(toAiProfile(userA), toAiProfile(userB));
+  const aiA = toAiProfile(userA);
+  const aiB = toAiProfile(userB);
+  // userA sees clues generated from userB profile; userB sees clues generated from userA profile.
+  const [cluesForUserA, cluesForUserB] = await Promise.all([generateDailyClues(aiA, aiB), generateDailyClues(aiB, aiA)]);
+
   const { error } = await supabaseAdmin
     .from('matches')
     .update({
-      day1_clues: clues.day1,
-      day2_clues: clues.day2,
-      day3_clues: clues.day3,
-      day4_clues: clues.day4,
+      day1_clues: buildPerUserClues(userA.id, userB.id, cluesForUserA.day1, cluesForUserB.day1),
+      day2_clues: buildPerUserClues(userA.id, userB.id, cluesForUserA.day2, cluesForUserB.day2),
+      day3_clues: buildPerUserClues(userA.id, userB.id, cluesForUserA.day3, cluesForUserB.day3),
+      day4_clues: buildPerUserClues(userA.id, userB.id, cluesForUserA.day4, cluesForUserB.day4),
     })
     .eq('id', matchId);
   if (error) throw error;
