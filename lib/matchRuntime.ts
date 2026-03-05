@@ -289,7 +289,14 @@ export async function createMatchAndClues(initiatorId: string, targetId: string,
   if (a.error) throw a.error;
   if (b.error) throw b.error;
 
-  await generateCluesForMatch(inserted.id, a.data, b.data);
+  let cluesReady = true;
+  try {
+    await generateCluesForMatch(inserted.id, a.data, b.data);
+  } catch (err) {
+    cluesReady = false;
+    console.error('Initial clue generation failed, will rely on later retry:', err);
+  }
+
   await incrementQuotaUsage(initiatorId);
-  return inserted.id as string;
+  return { matchId: inserted.id as string, cluesReady };
 }

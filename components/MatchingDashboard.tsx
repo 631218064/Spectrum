@@ -34,6 +34,7 @@ import {
 } from '@ant-design/icons';
 import { supabase } from '@/lib/supabase';
 import { matchingTranslations } from '@/lib/matchingTranslations';
+import MatchGeneratingOverlay from '@/components/MatchGeneratingOverlay';
 
 type Lang = 'zh' | 'en';
 const { Text, Title } = Typography;
@@ -59,6 +60,7 @@ interface NotificationItem {
 
 interface MatchItem {
   id: string;
+  clueStatus?: 'ready' | 'pending';
   isDeductedSide: boolean;
   current_day: number;
   created_at: string;
@@ -160,19 +162,22 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
   const [submitting, setSubmitting] = useState(false);
   const [myUserId, setMyUserId] = useState('');
   const langRef = useRef<Lang>(lang);
+  const [generatingMatchId, setGeneratingMatchId] = useState('');
+  const [showGenerating, setShowGenerating] = useState(false);
+  const [startedAt, setStartedAt] = useState(0);
   const cardClass =
     'border border-[#E5E9F0] bg-[linear-gradient(180deg,#E8F0F8_0%,#FFFFFF_100%)] shadow-[0_8px_24px_rgba(45,62,80,0.06)]';
   const subCardClass =
     'border border-[#E5E9F0] bg-[linear-gradient(180deg,rgba(168,213,229,0.08)_0%,#FFFFFF_100%)] shadow-[0_6px_18px_rgba(45,62,80,0.05)]';
 
-  const loadDashboard = async () => {
+  const loadDashboard = async (): Promise<DashboardPayload | null> => {
     try {
       setError('');
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) {
         router.push('/auth/signin');
-        return;
+        return null;
       }
 
       const resp = await fetch(`/api/matches?lang=${langRef.current}`, {
@@ -186,11 +191,34 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
       const exists = payload.matches.some((m) => m.id === hashId);
       const nextId = exists ? hashId : payload.matches[0]?.id || '';
       setSelectedId((prev) => (prev && payload.matches.some((m) => m.id === prev) ? prev : nextId));
+      return payload;
     } catch {
       setError(t.loadFailed);
+      return null;
     } finally {
       setLoading(false);
     }
+  };
+
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const isMatchReady = (payload: DashboardPayload | null, matchId: string) => {
+    if (!payload || !matchId) return false;
+    const found = payload.matches.find((m) => m.id === matchId);
+    return Boolean(found && found.clueStatus === 'ready');
+  };
+
+  const finishGeneratingIfReady = async (payload?: DashboardPayload | null) => {
+    const latest = payload ?? (await loadDashboard());
+    if (!latest || !generatingMatchId) return false;
+    if (!isMatchReady(latest, generatingMatchId)) return false;
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < 1000) await wait(1000 - elapsed);
+    setSelectedId(generatingMatchId);
+    window.location.hash = `match-${generatingMatchId}`;
+    setShowGenerating(false);
+    setGeneratingMatchId('');
+    return true;
   };
 
   const loadMessages = async (matchId: string) => {
@@ -218,6 +246,15 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
     loadDashboard();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang]);
+
+  useEffect(() => {
+    if (!showGenerating || !generatingMatchId) return;
+    const timer = setInterval(() => {
+      finishGeneratingIfReady();
+    }, 2500);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showGenerating, generatingMatchId, startedAt]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: u }) => setMyUserId(u.user?.id || ''));
@@ -300,6 +337,11 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
   const respondInvite = async (requestId: string, accept: boolean) => {
     try {
       setSubmitting(true);
+      if (accept) {
+        setShowGenerating(true);
+        setGeneratingMatchId('');
+        setStartedAt(Date.now());
+      }
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) return;
@@ -309,9 +351,18 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
         body: JSON.stringify({ requestId, accept }),
       });
       if (!resp.ok) throw new Error(t.actionFailed);
-      await loadDashboard();
+      if (!accept) {
+        await loadDashboard();
+        return;
+      }
+      const body = (await resp.json().catch(() => ({}))) as { matchId?: string };
+      if (body.matchId) setGeneratingMatchId(body.matchId);
+      const payload = await loadDashboard();
+      await finishGeneratingIfReady(payload);
     } catch {
       openError(t.notifTitle, t.actionFailed);
+      setShowGenerating(false);
+      setGeneratingMatchId('');
     } finally {
       setSubmitting(false);
     }
@@ -395,6 +446,9 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
       }}
     >
       {notifyCtx}
+      {showGenerating ? (
+        <MatchGeneratingOverlay lang={lang} />
+      ) : null}
       <div className="min-h-screen bg-white px-5 py-6 text-[#2E3B4E]">
         <div className="mx-auto max-w-[1280px]">
           <Card className={`mb-4 ${cardClass}`} styles={{ body: { padding: 14 } }}>

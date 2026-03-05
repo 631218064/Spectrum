@@ -80,9 +80,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const reverse = (reverseResp.data || []).find((r) => r.from_user_id === top.profile.id);
     if (reverse) {
-      const matchId = await createMatchAndClues(reverse.from_user_id, reverse.to_user_id, 'realtime');
+      const { matchId, cluesReady } = await createMatchAndClues(reverse.from_user_id, reverse.to_user_id, 'realtime');
       await supabaseAdmin.from('match_requests').delete().eq('id', reverse.id);
-      return res.status(200).json({ status: 'matched', matchId, candidateId: top.profile.id, score: top.score });
+      return res.status(200).json({ status: 'matched', matchId, cluesReady, candidateId: top.profile.id, score: top.score });
     }
 
     const { error: insertError } = await supabaseAdmin

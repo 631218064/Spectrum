@@ -30,9 +30,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ status: 'rejected' });
     }
 
-    const matchId = await createMatchAndClues(request.from_user_id, request.to_user_id, 'invite');
+    const { matchId, cluesReady } = await createMatchAndClues(request.from_user_id, request.to_user_id, 'invite');
     await supabaseAdmin.from('match_requests').delete().eq('id', requestId);
-    return res.status(200).json({ status: 'matched', matchId });
+    return res.status(200).json({ status: 'matched', matchId, cluesReady });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'Respond failed' });
   }

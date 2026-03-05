@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { generateCluesForMatch } from '@/lib/matchRuntime';
 import { getNextUnlockAt, getQuotaInfo, getSecondBeijingEightAfter, isInTrialPeriod } from '@/lib/matchRuntime';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
@@ -40,6 +41,10 @@ function resolveViewerClues(raw: any, viewerId: string, user1Id: string, user2Id
     if (Array.isArray(parsed.for_user2)) return parsed.for_user2;
   }
   return [];
+}
+
+function hasViewerClues(raw: any, viewerId: string, user1Id: string, user2Id: string, lang: 'zh' | 'en') {
+  return resolveViewerClues(raw, viewerId, user1Id, user2Id, lang).length > 0;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -85,6 +90,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (matchesResp.error) throw matchesResp.error;
     if (meResp.error) throw meResp.error;
 
+    // Self-heal: if clues are missing for current viewer, try regenerate once during query.
+    for (const match of matchesResp.data || []) {
+      const ready =
+        hasViewerClues(match.day1_clues, user.id, match.user1_id, match.user2_id, lang) &&
+        hasViewerClues(match.day2_clues, user.id, match.user1_id, match.user2_id, lang) &&
+        hasViewerClues(match.day3_clues, user.id, match.user1_id, match.user2_id, lang) &&
+        hasViewerClues(match.day4_clues, user.id, match.user1_id, match.user2_id, lang);
+      if (ready) continue;
+      try {
+        const user1 = (match as any).user1;
+        const user2 = (match as any).user2;
+        if (user1?.id && user2?.id) {
+          await generateCluesForMatch(match.id, user1, user2);
+        }
+      } catch (err) {
+        console.error('clue self-heal failed', { matchId: match.id, err });
+      }
+    }
+
+    // Reload matches after self-heal attempt.
+    const { data: refreshedMatches, error: refreshError } = await supabaseAdmin
+      .from('matches')
+      .select(
+        `
+        *,
+        user1:profiles!matches_user1_id_fkey(*),
+        user2:profiles!matches_user2_id_fkey(*)
+      `
+      )
+      .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
+    if (refreshError) throw refreshError;
+
     const notifications = (notificationsResp.data || []).map((item: any) => ({
       id: item.id,
       created_at: item.created_at,
@@ -96,24 +135,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     }));
 
-    const matches = (matchesResp.data || []).map((match: any) => {
+    const matches = (refreshedMatches || []).map((match: any) => {
       const isUser1 = match.user1_id === user.id;
       const otherUser = isUser1 ? match.user2 : match.user1;
       const createdAt = match.created_at || serverTime;
       const photos = parseMaybeJson(otherUser?.photos) || [];
+      const day1 = resolveViewerClues(match.day1_clues, user.id, match.user1_id, match.user2_id, lang);
+      const day2 = resolveViewerClues(match.day2_clues, user.id, match.user1_id, match.user2_id, lang);
+      const day3 = resolveViewerClues(match.day3_clues, user.id, match.user1_id, match.user2_id, lang);
+      const day4 = resolveViewerClues(match.day4_clues, user.id, match.user1_id, match.user2_id, lang);
+      const clueStatus = day1.length && day2.length && day3.length && day4.length ? 'ready' : 'pending';
       return {
         id: match.id,
         isDeductedSide: isUser1,
+        clueStatus,
         current_day: Number(match.current_day || 1),
         created_at: createdAt,
         trial_ends_at: getSecondBeijingEightAfter(createdAt),
         isInTrialPeriod: isInTrialPeriod(createdAt, serverTime),
         next_unlock_at: match.next_unlock_at || getNextUnlockAt(serverTime),
         match_source: match.match_source || 'invite',
-        day1_clues: resolveViewerClues(match.day1_clues, user.id, match.user1_id, match.user2_id, lang),
-        day2_clues: resolveViewerClues(match.day2_clues, user.id, match.user1_id, match.user2_id, lang),
-        day3_clues: resolveViewerClues(match.day3_clues, user.id, match.user1_id, match.user2_id, lang),
-        day4_clues: resolveViewerClues(match.day4_clues, user.id, match.user1_id, match.user2_id, lang),
+        day1_clues: day1,
+        day2_clues: day2,
+        day3_clues: day3,
+        day4_clues: day4,
         day5_unlocked_at: match.day5_unlocked_at || null,
         otherUser: {
           id: otherUser?.id || '',
