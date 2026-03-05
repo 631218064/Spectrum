@@ -2,6 +2,7 @@
 import { useRouter } from 'next/router';
 import { Button, Card, Form, Input, message, Typography } from 'antd';
 import { supabase } from '@/lib/supabase';
+import AppPageLoader from '@/components/AppPageLoader';
 
 const { Title, Text } = Typography;
 
@@ -64,7 +65,7 @@ export default function ProfileEditPage() {
   };
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+    return <AppPageLoader />;
   }
 
   return (

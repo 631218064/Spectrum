@@ -1,8 +1,8 @@
-// pages/auth/confirm.tsx
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import AppPageLoader from '@/components/AppPageLoader';
 
 export default function Confirm() {
   const router = useRouter();
@@ -11,34 +11,30 @@ export default function Confirm() {
 
   useEffect(() => {
     const handleConfirm = async () => {
-      const { access_token, type, error, error_description } = router.query;
+      const { access_token, error, error_description } = router.query;
 
-      // 如果有错误参数，直接显示错误
       if (error) {
         setStatus('error');
-        setMessage(error_description as string || '确认失败');
+        setMessage((error_description as string) || '确认失败');
         return;
       }
 
-      // 如果是访问令牌验证（根据 Supabase 回调类型，可能是 access_token）
       if (access_token && typeof access_token === 'string') {
         try {
-          // 使用 access_token 设置会话
-          const { error } = await supabase.auth.setSession({
+          const { error: sessionError } = await supabase.auth.setSession({
             access_token,
-            refresh_token: '', // 如果需要刷新令牌，可以从 query 中获取
+            refresh_token: '',
           });
-          if (error) throw error;
+          if (sessionError) throw sessionError;
           setStatus('success');
-          setMessage('邮箱已成功确认！');
+          setMessage('邮箱已成功确认。');
         } catch (err: any) {
           setStatus('error');
-          setMessage(err.message || '确认失败');
+          setMessage(err?.message || '确认失败');
         }
       } else {
-        // 如果没有 access_token，可能是其他情况（如 magic link）
         setStatus('error');
-        setMessage('无效的确认链接');
+        setMessage('无效的确认链接。');
       }
     };
 
@@ -47,19 +43,17 @@ export default function Confirm() {
     }
   }, [router.isReady, router.query]);
 
+  if (status === 'loading') {
+    return <AppPageLoader />;
+  }
+
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-xl text-center">
-        {status === 'loading' && (
-          <>
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500 mx-auto mb-4"></div>
-            <p className="text-white/70">正在确认邮箱...</p>
-          </>
-        )}
         {status === 'success' && (
           <>
             <div className="text-green-500 text-5xl mb-4">✓</div>
-            <h2 className="text-2xl font-bold mb-2">确认成功！</h2>
+            <h2 className="text-2xl font-bold mb-2">确认成功</h2>
             <p className="text-white/70 mb-6">{message}</p>
             <Link
               href="/auth/signin"
@@ -71,7 +65,7 @@ export default function Confirm() {
         )}
         {status === 'error' && (
           <>
-            <div className="text-red-500 text-5xl mb-4">✗</div>
+            <div className="text-red-500 text-5xl mb-4">✕</div>
             <h2 className="text-2xl font-bold mb-2">确认失败</h2>
             <p className="text-white/70 mb-6">{message}</p>
             <Link

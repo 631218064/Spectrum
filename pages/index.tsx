@@ -5,9 +5,11 @@ import { Globe } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { translations } from '@/lib/translations';
 import { useGlobalLanguage } from '@/hooks/useGlobalLanguage';
+import AppPageLoader from '@/components/AppPageLoader';
 
 const MatchingDashboard = dynamic(() => import('@/components/MatchingDashboard'), {
   ssr: false,
+  loading: () => <AppPageLoader />,
 });
 
 type View = 'landing' | 'dashboard';
@@ -62,11 +64,7 @@ export default function Home({ session: initialSession }: any) {
   }, [router, session]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050505]">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-pink-500" />
-      </div>
-    );
+    return <AppPageLoader />;
   }
 
   if (view === 'landing') {

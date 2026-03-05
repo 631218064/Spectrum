@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import type { AppProps } from 'next/app';
 import type { Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/router';
+import AppPageLoader from '@/components/AppPageLoader';
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -30,11 +31,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   // 濡傛灉姝ｅ湪鍔犺浇锛屽彲浠ユ樉绀轰竴涓叏灞€鍔犺浇鍔ㄧ敾锛堝彲閫夛級
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="text-white/50">Loading...</div>
-      </div>
-    );
+    return <AppPageLoader />;
   }
 
   // 灏?session 閫氳繃 pageProps 浼犻€掔粰椤甸潰缁勪欢锛堜篃鍙敤 context锛?

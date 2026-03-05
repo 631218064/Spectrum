@@ -35,6 +35,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { matchingTranslations } from '@/lib/matchingTranslations';
 import MatchGeneratingOverlay from '@/components/MatchGeneratingOverlay';
+import AppPageLoader from '@/components/AppPageLoader';
 
 type Lang = 'zh' | 'en';
 const { Text, Title } = Typography;
@@ -409,7 +410,7 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    router.push('/auth/signin');
+    router.push('/');
   };
 
   const menuItems = [
@@ -419,7 +420,7 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
   ];
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center bg-white text-[#2E3B4E]">{t.loading}</div>;
+    return <AppPageLoader />;
   }
 
   if (error) {
