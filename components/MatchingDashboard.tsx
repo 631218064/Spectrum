@@ -334,6 +334,11 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
     }
   };
 
+  const openNotificationCenter = async () => {
+    await loadDashboard();
+    setNotifOpen(true);
+  };
+
   const respondInvite = async (requestId: string, accept: boolean) => {
     try {
       setSubmitting(true);
@@ -466,7 +471,7 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
               </Title>
               <Space size={16}>
                 <Badge count={data?.notifications.length || 0} size="small">
-                  <Button shape="circle" icon={<BellOutlined />} onClick={() => setNotifOpen(true)} />
+                  <Button shape="circle" icon={<BellOutlined />} onClick={openNotificationCenter} />
                 </Badge>
                 <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
                   <Button
