@@ -14,8 +14,8 @@
 - 右侧：
   - 通知中心（铃铛）：有待处理邀约时显示红点。
   - 用户菜单（缩略头像）：
-    - 更新资料（跳转 `/profile/edit`）
-    - 退出登录（退出后跳转 `/auth/signin`）
+    - 更新资料（跳转 `/register?mode=edit`）
+    - 退出登录（退出后跳转 `/`）
   - 中英文切换按钮。
 
 ---
@@ -31,6 +31,7 @@
 
 #### 2. 通知中心（邀约）
 - 展示 `notifications` 中待处理邀约。
+- 点击“通知中心”按钮会立即触发一次 loadDashboard() 拉取最新通知（不必等轮询/刷新）。
 - 每条邀约支持：
   - 同意：`POST /api/matches/respond` + `accept=true`
   - 忽略：`POST /api/matches/respond` + `accept=false`
@@ -50,7 +51,7 @@
 - URL hash 同步：`#match-{id}`，支持刷新后定位。
 
 #### 4. 当前匹配详情
-包含以下模块：
+- 已匹配对象侧头像、昵称及资料字段保持创建时快照版本；编辑资料仅影响未来匹配。
 
 ##### a. 匹配信息
 - 显示对方昵称、当前天数、匹配来源。
@@ -98,6 +99,11 @@
     - 对于未被扣减方（被邀请方）：二次确认弹窗，提示文案“确认终止这段旅程吗？”/“Confirm termination of this trip?”
 - 终止后前端逻辑隐藏该匹配；历史消息由后端异步清理。
 
+#### 5. 更新资料
+- 更新资料（注册编辑模式）需提示
+  - 中文：修改资料仅对未来的匹配生效，已进行的匹配不受影响。
+  - 英文：Profile updates only apply to future matches. Existing matches are not affected.
+
 ---
 
 ### 交互逻辑
@@ -109,6 +115,7 @@
   - `quota`（used/remaining/start/end）
   - `notifications`（待处理邀约）
   - `matches`（含 `isInTrialPeriod`、`next_unlock_at`、`match_source` 等）
+- 除“匹配生成线索等待页”外，页面初始化/刷新/异步加载均使用统一AppPageLoader；“匹配生成中”仍使用独立的 MatchGeneratingOverlay
 
 #### 实时匹配与邀约关系
 - 当前以“邀约-同意-建 match”流程为主。
@@ -165,5 +172,3 @@
 - `POST /api/matches/respond`
 - `POST /api/matches/[id]/message`
 - `DELETE /api/matches/[id]/terminate`
-- `GET /api/notifications`（可选）
-- `PATCH /api/notifications`（可选）
