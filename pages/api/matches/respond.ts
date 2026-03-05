@@ -26,6 +26,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (error || !request) return res.status(404).json({ error: 'Request not found' });
 
     if (!accept) {
+      const ignoredAt = new Date().toISOString();
+      const { error: ignoreLogError } = await supabaseAdmin.from('ignored_invitations').insert({
+        inviter_id: request.from_user_id,
+        invitee_id: request.to_user_id,
+        ignored_at: ignoredAt,
+      });
+      if (ignoreLogError) {
+        return res.status(500).json({ error: ignoreLogError.message || 'Failed to record ignore event' });
+      }
       await supabaseAdmin.from('match_requests').update({ status: 'expired' }).eq('id', requestId);
       return res.status(200).json({ status: 'rejected' });
     }
