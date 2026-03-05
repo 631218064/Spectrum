@@ -23,11 +23,11 @@
     }
   ],
   "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
-    "NEXTAUTH_URL": "@nextauth_url",
-    "NEXTAUTH_SECRET": "@nextauth_secret",
-    "CRON_SECRET": "@cron_secret"
+    "NEXT_PUBLIC_SUPABASE_URL": "https://bfhaxyrvragrkuhmdhcl.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmaGF4eXJ2cmFncmt1aG1kaGNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MzI5NjAsImV4cCI6MjA4NzQwODk2MH0.AX4O8NFPdSWja7Pi8WJmaUvo7Rh3fYk8zkXuMFceU2A",
+    "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmaGF4eXJ2cmFncmt1aG1kaGNsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTgzMjk2MCwiZXhwIjoyMDg3NDA4OTYwfQ.S24bSH7uNBgiIc-bqNWmIvy5tJjV92mYgs2IeC5PP4E",
+    "NEXTAUTH_URL": "https://spectrum5.asia",
+    "NEXTAUTH_SECRET": "ZFT4p7QUIFB0G2wCkqMFZHO0WOCPcl70NcunrUl0qpo=",
+    "CRON_SECRET": "C7UZzMi0PW8BIMlUrsPK9bySp3smeF8pljr4F49ewfY="
   }
 }
