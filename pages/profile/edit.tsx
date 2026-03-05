@@ -1,6 +1,11 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { Button, Card, Form, Input, message, Typography } from 'antd';
+import Button from 'antd/lib/button';
+import Card from 'antd/lib/card';
+import Form from 'antd/lib/form';
+import Input from 'antd/lib/input';
+import message from 'antd/lib/message';
+import Typography from 'antd/lib/typography';
 import { supabase } from '@/lib/supabase';
 import AppPageLoader from '@/components/AppPageLoader';
 
@@ -49,10 +54,7 @@ export default function ProfileEditPage() {
         return;
       }
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({ nickname: nextName })
-        .eq('id', uid);
+      const { error } = await supabase.from('profiles').update({ nickname: nextName }).eq('id', uid);
 
       if (error) throw error;
       message.success('Saved');
@@ -72,7 +74,9 @@ export default function ProfileEditPage() {
     <div className="min-h-screen bg-[#f8fafc] px-4 py-8">
       <div className="mx-auto max-w-xl">
         <Card>
-          <Title level={3} style={{ marginTop: 0 }}>Update Profile</Title>
+          <Title level={3} style={{ marginTop: 0 }}>
+            Update Profile
+          </Title>
           <Text type="secondary">Temporary rebuilt page. We can replace with your exact previous version after diff replay.</Text>
           <Form layout="vertical" style={{ marginTop: 16 }}>
             <Form.Item label="Nickname" required>
@@ -80,7 +84,9 @@ export default function ProfileEditPage() {
             </Form.Item>
             <div className="flex gap-3">
               <Button onClick={() => router.push('/')}>Back</Button>
-              <Button type="primary" loading={saving} onClick={onSave}>Save</Button>
+              <Button type="primary" loading={saving} onClick={onSave}>
+                Save
+              </Button>
             </div>
           </Form>
         </Card>
