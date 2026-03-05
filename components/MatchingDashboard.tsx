@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import Avatar from 'antd/lib/avatar';
 import Badge from 'antd/lib/badge';
@@ -159,6 +159,7 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
   const [notifOpen, setNotifOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [myUserId, setMyUserId] = useState('');
+  const langRef = useRef<Lang>(lang);
   const cardClass =
     'border border-[#E5E9F0] bg-[linear-gradient(180deg,#E8F0F8_0%,#FFFFFF_100%)] shadow-[0_8px_24px_rgba(45,62,80,0.06)]';
   const subCardClass =
@@ -174,7 +175,7 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
         return;
       }
 
-      const resp = await fetch('/api/matches', {
+      const resp = await fetch(`/api/matches?lang=${langRef.current}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!resp.ok) throw new Error(t.loadFailed);
@@ -203,11 +204,20 @@ export default function MatchingDashboard({ lang, onToggleLang }: { lang: Lang; 
   };
 
   useEffect(() => {
+    langRef.current = lang;
+  }, [lang]);
+
+  useEffect(() => {
     loadDashboard();
     const timer = setInterval(loadDashboard, 30000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    loadDashboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: u }) => setMyUserId(u.user?.id || ''));

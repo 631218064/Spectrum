@@ -1,4 +1,4 @@
-import { generateDailyClues, type UserProfile } from '@/lib/ai';
+import { generateDailyClues, translateClues, type UserProfile } from '@/lib/ai';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const MATCH_WEEKLY_LIMIT = 5;
@@ -201,10 +201,17 @@ function toAiProfile(input: any): UserProfile {
   };
 }
 
-function buildPerUserClues(userAId: string, userBId: string, cluesForA: string[], cluesForB: string[]) {
+function buildPerUserClues(
+  userAId: string,
+  userBId: string,
+  cluesForAZh: string[],
+  cluesForAEn: string[],
+  cluesForBZh: string[],
+  cluesForBEn: string[]
+) {
   return {
-    [userAId]: cluesForA,
-    [userBId]: cluesForB,
+    [userAId]: { zh: cluesForAZh, en: cluesForAEn },
+    [userBId]: { zh: cluesForBZh, en: cluesForBEn },
   };
 }
 
@@ -212,15 +219,50 @@ export async function generateCluesForMatch(matchId: string, userA: any, userB: 
   const aiA = toAiProfile(userA);
   const aiB = toAiProfile(userB);
   // userA sees clues generated from userB profile; userB sees clues generated from userA profile.
-  const [cluesForUserA, cluesForUserB] = await Promise.all([generateDailyClues(aiA, aiB), generateDailyClues(aiB, aiA)]);
+  const [cluesForUserAZh, cluesForUserBZh] = await Promise.all([
+    generateDailyClues(aiA, aiB, 'zh'),
+    generateDailyClues(aiB, aiA, 'zh'),
+  ]);
+  const [cluesForUserAEn, cluesForUserBEn] = await Promise.all([
+    translateClues(cluesForUserAZh, 'en'),
+    translateClues(cluesForUserBZh, 'en'),
+  ]);
 
   const { error } = await supabaseAdmin
     .from('matches')
     .update({
-      day1_clues: buildPerUserClues(userA.id, userB.id, cluesForUserA.day1, cluesForUserB.day1),
-      day2_clues: buildPerUserClues(userA.id, userB.id, cluesForUserA.day2, cluesForUserB.day2),
-      day3_clues: buildPerUserClues(userA.id, userB.id, cluesForUserA.day3, cluesForUserB.day3),
-      day4_clues: buildPerUserClues(userA.id, userB.id, cluesForUserA.day4, cluesForUserB.day4),
+      day1_clues: buildPerUserClues(
+        userA.id,
+        userB.id,
+        cluesForUserAZh.day1,
+        cluesForUserAEn.day1,
+        cluesForUserBZh.day1,
+        cluesForUserBEn.day1
+      ),
+      day2_clues: buildPerUserClues(
+        userA.id,
+        userB.id,
+        cluesForUserAZh.day2,
+        cluesForUserAEn.day2,
+        cluesForUserBZh.day2,
+        cluesForUserBEn.day2
+      ),
+      day3_clues: buildPerUserClues(
+        userA.id,
+        userB.id,
+        cluesForUserAZh.day3,
+        cluesForUserAEn.day3,
+        cluesForUserBZh.day3,
+        cluesForUserBEn.day3
+      ),
+      day4_clues: buildPerUserClues(
+        userA.id,
+        userB.id,
+        cluesForUserAZh.day4,
+        cluesForUserAEn.day4,
+        cluesForUserBZh.day4,
+        cluesForUserBEn.day4
+      ),
     })
     .eq('id', matchId);
   if (error) throw error;

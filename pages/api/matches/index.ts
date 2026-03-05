@@ -18,13 +18,17 @@ function toName(profile: any) {
   return profile?.nickname || profile?.username || 'User';
 }
 
-function resolveViewerClues(raw: any, viewerId: string, user1Id: string, user2Id: string): string[] {
+function resolveViewerClues(raw: any, viewerId: string, user1Id: string, user2Id: string, lang: 'zh' | 'en'): string[] {
   const parsed = parseMaybeJson(raw);
   if (Array.isArray(parsed)) return parsed;
   if (!parsed || typeof parsed !== 'object') return [];
 
   const byViewer = parsed[viewerId];
   if (Array.isArray(byViewer)) return byViewer;
+  if (byViewer && typeof byViewer === 'object') {
+    const byLang = byViewer[lang] || byViewer.zh || byViewer.en;
+    if (Array.isArray(byLang)) return byLang;
+  }
 
   // Backward/compat keys if present in historical data.
   if (viewerId === user1Id) {
@@ -49,6 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
 
   try {
+    const lang = req.query.lang === 'en' ? 'en' : 'zh';
     const serverTime = new Date().toISOString();
     const quota = await getQuotaInfo(user.id);
     const nowIso = new Date().toISOString();
@@ -105,10 +110,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         isInTrialPeriod: isInTrialPeriod(createdAt, serverTime),
         next_unlock_at: match.next_unlock_at || getNextUnlockAt(serverTime),
         match_source: match.match_source || 'invite',
-        day1_clues: resolveViewerClues(match.day1_clues, user.id, match.user1_id, match.user2_id),
-        day2_clues: resolveViewerClues(match.day2_clues, user.id, match.user1_id, match.user2_id),
-        day3_clues: resolveViewerClues(match.day3_clues, user.id, match.user1_id, match.user2_id),
-        day4_clues: resolveViewerClues(match.day4_clues, user.id, match.user1_id, match.user2_id),
+        day1_clues: resolveViewerClues(match.day1_clues, user.id, match.user1_id, match.user2_id, lang),
+        day2_clues: resolveViewerClues(match.day2_clues, user.id, match.user1_id, match.user2_id, lang),
+        day3_clues: resolveViewerClues(match.day3_clues, user.id, match.user1_id, match.user2_id, lang),
+        day4_clues: resolveViewerClues(match.day4_clues, user.id, match.user1_id, match.user2_id, lang),
         day5_unlocked_at: match.day5_unlocked_at || null,
         otherUser: {
           id: otherUser?.id || '',

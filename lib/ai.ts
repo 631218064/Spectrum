@@ -1,7 +1,6 @@
-﻿// lib/ai.ts
-// AI 绾跨储鐢熸垚妯″潡锛岃皟鐢?DeepSeek API锛屽苟鏀寔妯℃澘鍥為€€
+﻿import { generateTemplateClues } from './clueTemplates';
 
-import { generateTemplateClues } from './clueTemplates';
+export type ClueLang = 'zh' | 'en';
 
 export interface UserProfile {
   id: string;
@@ -46,7 +45,6 @@ export interface UserProfile {
   family_background?: string;
   work_industry?: string;
   financial_status?: string;
-  // 鍏朵粬瀛楁鍙寜闇€娣诲姞
 }
 
 export interface Clues {
@@ -61,26 +59,20 @@ function isResponsesApi(url: string): boolean {
 }
 
 function extractTextFromAiResponse(data: any): string {
-  if (typeof data?.output_text === 'string' && data.output_text.trim()) {
-    return data.output_text;
-  }
+  if (typeof data?.output_text === 'string' && data.output_text.trim()) return data.output_text;
 
   if (Array.isArray(data?.output)) {
     for (const item of data.output) {
       const content = Array.isArray(item?.content) ? item.content : [];
       for (const part of content) {
         const text = part?.text || part?.output_text;
-        if (typeof text === 'string' && text.trim()) {
-          return text;
-        }
+        if (typeof text === 'string' && text.trim()) return text;
       }
     }
   }
 
   const chatText = data?.choices?.[0]?.message?.content;
-  if (typeof chatText === 'string' && chatText.trim()) {
-    return chatText;
-  }
+  if (typeof chatText === 'string' && chatText.trim()) return chatText;
   return '';
 }
 
@@ -101,21 +93,22 @@ function parseCluesFromContent(content: string): Clues | null {
   return null;
 }
 
-/**
- * 璋冪敤 DeepSeek API 鐢熸垚涓€у寲绾跨储
- */
-async function generateCluesWithAI(user1: UserProfile, user2: UserProfile): Promise<Clues | null> {
+function getAiRuntimeConfig() {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   const apiUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions';
   const model = process.env.AI_CLUE_MODEL || 'deepseek-chat';
   const useResponses = isResponsesApi(apiUrl);
+  return { apiKey, apiUrl, model, useResponses };
+}
+
+async function generateCluesWithAI(user1: UserProfile, user2: UserProfile, lang: ClueLang): Promise<Clues | null> {
+  const { apiKey, apiUrl, model, useResponses } = getAiRuntimeConfig();
 
   if (!apiKey) {
     console.warn('DeepSeek API key not configured, falling back to templates');
     return null;
   }
 
-  // 鏋勫缓鎻愮ず璇嶏紝瑕佹眰鐢熸垚 4 鏉℃氮婕嚎绱?
   const prompt = `
 你是一个温柔、浪漫且富有洞察力的AI助手，为交友平台“Spectrum”生成每日线索。Spectrum采用“慢揭晓”机制：匹配成功后，双方每天解锁关于对方的神秘线索，第五天公开联系方式。你的任务是根据双方的注册资料，生成连续4天（第1天至第4天）的线索，每天3-5条，旨在激发用户的好奇心与情感连接。
 
@@ -137,7 +130,7 @@ async function generateCluesWithAI(user1: UserProfile, user2: UserProfile): Prom
 2. 覆盖不同维度，4天之间避免重复同一信息点。
 3. 语言温柔、积极、正向，不做负面评价。
 4. 兼顾文化敏感性，避免生僻地域梗。
-5. 若无法判断语言，默认输出中文。
+5. 语言要求：必须使用指定语言输出，禁止混用。目标语言为：${lang === 'en' ? 'English' : '中文'}。
 
 ### 每日主题建议
 - Day1：初印象与感官世界（照片氛围/声音/色彩/气味/MBTI/星座）
@@ -206,7 +199,6 @@ ${JSON.stringify(user2, null, 2)}
     const data = await response.json();
     const content = extractTextFromAiResponse(data);
     if (!content) return null;
-
     return parseCluesFromContent(content);
   } catch (error) {
     console.error('AI generation failed:', error);
@@ -214,22 +206,76 @@ ${JSON.stringify(user2, null, 2)}
   }
 }
 
-/**
- * 鐢熸垚姣忔棩绾跨储鐨勪富鍏ュ彛
- * @param user1 鐢ㄦ埛 1 璧勬枡
- * @param user2 鐢ㄦ埛 2 璧勬枡
- * @returns 绾跨储瀵硅薄
- */
-export async function generateDailyClues(user1: UserProfile, user2: UserProfile): Promise<Clues> {
-  // 濡傛灉鍚敤浜?AI 涓旀湁 API 瀵嗛挜锛屽皾璇曚娇鐢?AI 鐢熸垚
-  if (process.env.AI_CLUE_ENABLED === 'true') {
-    const aiClues = await generateCluesWithAI(user1, user2);
-    if (aiClues) {
-      return aiClues;
-    }
-  }
+export async function translateClues(base: Clues, targetLang: ClueLang): Promise<Clues> {
+  if (targetLang === 'zh') return base;
+  const { apiKey, apiUrl, model, useResponses } = getAiRuntimeConfig();
+  if (!apiKey) return base;
 
-  // 鍥為€€鍒版ā鏉跨敓鎴?
-  return generateTemplateClues(user1, user2);
+  const prompt = `
+You are a professional translator.
+Translate the following clue JSON from Chinese to English.
+Rules:
+1) Keep original meaning exactly; do not add/remove clues.
+2) Preserve day structure and item counts.
+3) Output ONLY a valid JSON object with keys day1/day2/day3/day4.
+4) Keep tone romantic, warm, and subtle.
+
+Input JSON:
+${JSON.stringify(base, null, 2)}
+`;
+
+  try {
+    const body = useResponses
+      ? {
+          model,
+          input: prompt,
+          temperature: 0.2,
+          max_output_tokens: 800,
+        }
+      : {
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.2,
+          max_tokens: 800,
+        };
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text().catch(() => '');
+      console.error('AI translation non-200 response', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errBody.slice(0, 1000),
+        apiUrl,
+        model,
+      });
+      return base;
+    }
+
+    const data = await response.json();
+    const content = extractTextFromAiResponse(data);
+    if (!content) return base;
+    const parsed = parseCluesFromContent(content);
+    return parsed || base;
+  } catch (error) {
+    console.error('AI translation failed:', error);
+    return base;
+  }
 }
 
+export async function generateDailyClues(user1: UserProfile, user2: UserProfile, lang: ClueLang = 'zh'): Promise<Clues> {
+  if (process.env.AI_CLUE_ENABLED === 'true') {
+    const aiClues = await generateCluesWithAI(user1, user2, lang);
+    if (aiClues) return aiClues;
+  }
+
+  return generateTemplateClues(user1, user2, lang);
+}
