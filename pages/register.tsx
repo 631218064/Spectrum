@@ -608,6 +608,13 @@ export default function RegistrationPage() {
         </div>
 
         <p className="mb-5 max-w-4xl text-sm leading-relaxed text-[#3a4662] md:text-[15px]">{t.welcome}</p>
+        {isEditMode ? (
+          <div className="mb-5 rounded-xl border border-[#f1d6a8] bg-[#fff6e8] px-4 py-2 text-sm text-[#8a5b14]">
+            {lang === 'zh'
+              ? '修改资料仅对未来的匹配生效，已进行的匹配不受影响。'
+              : 'Profile updates only apply to future matches. Existing matches are not affected.'}
+          </div>
+        ) : null}
 
         <div className="mb-6">
           <Field fieldKey="photos" label={t.labels.photos} required error={errors.photos ? t.errors[errors.photos] || errors.photos : ''}>

@@ -148,6 +148,53 @@ function asStringArray(value: any): string[] {
   return [];
 }
 
+function buildProfileSnapshot(input: any) {
+  const location = parseMaybeJson(input.location);
+  return {
+    id: input.id || '',
+    nickname: input.nickname || input.username || '',
+    username: input.username || '',
+    birthday: input.birthday || '',
+    gender: input.gender || '',
+    sexual_orientation: input.sexual_orientation || '',
+    location: {
+      country: location?.country || input.country || '',
+      province: location?.province || input.province || '',
+      city: location?.city || input.city || '',
+    },
+    country: location?.country || input.country || '',
+    province: location?.province || input.province || '',
+    city: location?.city || input.city || '',
+    mbti: input.mbti || '',
+    zodiac: input.zodiac || '',
+    growth_environment: input.growth_environment || '',
+    financial_status: input.financial_status || '',
+    education: input.education || '',
+    pet_preference: input.pet_preference || input.pet || '',
+    hobbies: asStringArray(input.hobbies || input.interests),
+    hobbies_custom: input.hobbies_custom || '',
+    sound_preference: input.sound_preference || '',
+    color_mood: input.color_mood || '',
+    color_mood_custom: input.color_mood_custom || '',
+    scent_memory: input.scent_memory || '',
+    scent_memory_custom: input.scent_memory_custom || '',
+    ritual: input.ritual || '',
+    ritual_custom: input.ritual_custom || '',
+    food_adventure: input.food_adventure || '',
+    conflict_reaction: input.conflict_reaction || '',
+    recharge_style: input.recharge_style || '',
+    mystery_question: input.mystery_question || '',
+    mystery_answer: input.mystery_answer || '',
+    valued_traits: asStringArray(input.valued_traits),
+    valued_traits_custom: input.valued_traits_custom || '',
+    relationship_goal: asStringArray(input.relationship_goal),
+    photos: asStringArray(input.photos),
+    profile_photo_url: input.profile_photo_url || asStringArray(input.photos)[0] || '',
+    contact_info: input.contact_info || input.preferred_contact || '',
+    preferred_contact: input.preferred_contact || input.contact_info || '',
+  };
+}
+
 function toAiProfile(input: any): UserProfile {
   const location = parseMaybeJson(input.location);
   const hobbies = asStringArray(input.hobbies || input.interests);
@@ -269,19 +316,6 @@ export async function generateCluesForMatch(matchId: string, userA: any, userB: 
 }
 
 export async function createMatchAndClues(initiatorId: string, targetId: string, source: 'invite' | 'realtime' = 'invite') {
-  const { data: inserted, error: insertError } = await supabaseAdmin
-    .from('matches')
-    .insert({
-      user1_id: initiatorId,
-      user2_id: targetId,
-      status: 'active',
-      current_day: 1,
-      match_source: source,
-    } as any)
-    .select('*')
-    .single();
-  if (insertError) throw insertError;
-
   const [a, b] = await Promise.all([
     supabaseAdmin.from('profiles').select('*').eq('id', initiatorId).single(),
     supabaseAdmin.from('profiles').select('*').eq('id', targetId).single(),
@@ -289,9 +323,35 @@ export async function createMatchAndClues(initiatorId: string, targetId: string,
   if (a.error) throw a.error;
   if (b.error) throw b.error;
 
+  const snapshotA = buildProfileSnapshot(a.data);
+  const snapshotB = buildProfileSnapshot(b.data);
+
+  let insertPayload: Record<string, any> = {
+    user1_id: initiatorId,
+    user2_id: targetId,
+    status: 'active',
+    current_day: 1,
+    match_source: source,
+    user1_profile_snapshot: snapshotA,
+    user2_profile_snapshot: snapshotB,
+  };
+  let inserted: any = null;
+  for (let i = 0; i < 10; i += 1) {
+    const { data, error } = await supabaseAdmin.from('matches').insert(insertPayload as any).select('*').single();
+    if (!error) {
+      inserted = data;
+      break;
+    }
+    const msg = String(error.message || '');
+    const missing = msg.match(/Could not find the '([^']+)' column/i)?.[1];
+    if (!missing) throw error;
+    delete insertPayload[missing];
+  }
+  if (!inserted) throw new Error('Failed to create match');
+
   let cluesReady = true;
   try {
-    await generateCluesForMatch(inserted.id, a.data, b.data);
+    await generateCluesForMatch(inserted.id, snapshotA, snapshotB);
   } catch (err) {
     cluesReady = false;
     console.error('Initial clue generation failed, will rely on later retry:', err);

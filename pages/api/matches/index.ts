@@ -15,6 +15,11 @@ function parseMaybeJson(value: any) {
   return value;
 }
 
+function parseSnapshot(value: any) {
+  const parsed = parseMaybeJson(value);
+  return parsed && typeof parsed === 'object' ? parsed : null;
+}
+
 function toName(profile: any) {
   return profile?.nickname || profile?.username || 'User';
 }
@@ -92,6 +97,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Self-heal: if clues are missing for current viewer, try regenerate once during query.
     for (const match of matchesResp.data || []) {
+      const snapshotUser1 = parseSnapshot((match as any).user1_profile_snapshot);
+      const snapshotUser2 = parseSnapshot((match as any).user2_profile_snapshot);
+      const regenUser1 = snapshotUser1 || (match as any).user1;
+      const regenUser2 = snapshotUser2 || (match as any).user2;
       const ready =
         hasViewerClues(match.day1_clues, user.id, match.user1_id, match.user2_id, lang) &&
         hasViewerClues(match.day2_clues, user.id, match.user1_id, match.user2_id, lang) &&
@@ -99,8 +108,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         hasViewerClues(match.day4_clues, user.id, match.user1_id, match.user2_id, lang);
       if (ready) continue;
       try {
-        const user1 = (match as any).user1;
-        const user2 = (match as any).user2;
+        const user1 = regenUser1;
+        const user2 = regenUser2;
         if (user1?.id && user2?.id) {
           await generateCluesForMatch(match.id, user1, user2);
         }
@@ -137,7 +146,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const matches = (refreshedMatches || []).map((match: any) => {
       const isUser1 = match.user1_id === user.id;
-      const otherUser = isUser1 ? match.user2 : match.user1;
+      const snapshotUser1 = parseSnapshot(match.user1_profile_snapshot);
+      const snapshotUser2 = parseSnapshot(match.user2_profile_snapshot);
+      const resolvedUser1 = snapshotUser1 || match.user1;
+      const resolvedUser2 = snapshotUser2 || match.user2;
+      const otherUser = isUser1 ? resolvedUser2 : resolvedUser1;
       const createdAt = match.created_at || serverTime;
       const photos = parseMaybeJson(otherUser?.photos) || [];
       const day1 = resolveViewerClues(match.day1_clues, user.id, match.user1_id, match.user2_id, lang);
