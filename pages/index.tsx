@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { Globe } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { translations } from '@/lib/translations';
+import { useGlobalLanguage } from '@/hooks/useGlobalLanguage';
 
 const MatchingDashboard = dynamic(() => import('@/components/MatchingDashboard'), {
   ssr: false,
@@ -23,7 +24,7 @@ const LanguageToggle = ({ lang, setLang, t }: any) => (
 
 export default function Home({ session: initialSession }: any) {
   const router = useRouter();
-  const [lang, setLang] = useState<'en' | 'zh'>('zh');
+  const { lang, setLang, toggleLang } = useGlobalLanguage('zh');
   const [view, setView] = useState<View>('landing');
   const [session, setSession] = useState(initialSession);
   const [loading, setLoading] = useState(true);
@@ -99,5 +100,5 @@ export default function Home({ session: initialSession }: any) {
     );
   }
 
-  return <MatchingDashboard lang={lang} onToggleLang={() => setLang((prev) => (prev === 'en' ? 'zh' : 'en'))} />;
+  return <MatchingDashboard lang={lang} onToggleLang={toggleLang} />;
 }

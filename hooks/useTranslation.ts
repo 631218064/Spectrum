@@ -1,8 +1,6 @@
-// hooks/useTranslation.ts
-// 多语言切换和翻译函数
-
-import { useState, useCallback } from 'react';
+﻿import { useCallback } from 'react';
 import { translations, Language, Translation } from '@/lib/translations';
+import { useGlobalLanguage } from '@/hooks/useGlobalLanguage';
 
 interface UseTranslationReturn {
   t: Translation;
@@ -12,11 +10,11 @@ interface UseTranslationReturn {
 }
 
 export function useTranslation(initialLang: Language = 'en'): UseTranslationReturn {
-  const [lang, setLang] = useState<Language>(initialLang);
+  const { lang, setLang } = useGlobalLanguage(initialLang);
 
   const toggleLang = useCallback(() => {
-    setLang(prev => prev === 'en' ? 'zh' : 'en');
-  }, []);
+    setLang(lang === 'en' ? 'zh' : 'en');
+  }, [lang, setLang]);
 
   return {
     t: translations[lang],

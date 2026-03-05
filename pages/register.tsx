@@ -14,12 +14,12 @@ import {
   PHOTO_ALLOWED_MIME_TYPES,
   PHOTO_MAX_BYTES,
   PHOTOS_MAX_COUNT,
-  type Language,
   type RegistrationFormData,
   validateRegistrationForm,
 } from '@/lib/registration';
 import { registrationTranslations } from '@/lib/registrationTranslations';
 import { supabase } from '@/lib/supabase';
+import { useGlobalLanguage } from '@/hooks/useGlobalLanguage';
 
 type ErrorMap = Record<string, string>;
 
@@ -194,7 +194,7 @@ const HOBBY_ICONS: Record<string, string> = {
 
 export default function RegistrationPage() {
   const router = useRouter();
-  const [lang, setLang] = useState<Language>('zh');
+  const { lang, toggleLang } = useGlobalLanguage('zh');
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<RegistrationFormData>(emptyRegistrationFormData());
   const [errors, setErrors] = useState<ErrorMap>({});
@@ -599,7 +599,7 @@ export default function RegistrationPage() {
           </button>
           <button
             type="button"
-            onClick={() => setLang((prev) => (prev === 'zh' ? 'en' : 'zh'))}
+            onClick={toggleLang}
             className="inline-flex items-center gap-1.5 rounded-full border border-[#bed0eb] bg-white/70 px-4 py-1.5 text-sm font-semibold text-[#3f4e6f]"
           >
             <GlobalOutlined />

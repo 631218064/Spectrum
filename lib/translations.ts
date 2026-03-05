@@ -106,3 +106,30 @@ export const translations = {
 export type Language = keyof typeof translations;
 export type Translation = typeof translations.en;
 export { registrationTranslations } from './registrationTranslations';
+
+export const loginTranslations = {
+  en: {
+    toggleLang: '中文',
+    emailLabel: 'Email',
+    emailPlaceholder: 'Please input your email',
+    passwordLabel: 'Password',
+    passwordPlaceholder: 'Please input your password',
+    signIn: 'Sign In',
+    processing: 'Processing...',
+    noAccount: "Don't have an account?",
+    signUp: 'Sign up',
+    genericError: 'Login failed. Please try again.',
+  },
+  zh: {
+    toggleLang: 'EN',
+    emailLabel: '邮箱',
+    emailPlaceholder: '请输入邮箱',
+    passwordLabel: '密码',
+    passwordPlaceholder: '请输入密码',
+    signIn: '登录',
+    processing: '处理中...',
+    noAccount: '还没有账号？',
+    signUp: '注册',
+    genericError: '登录失败，请重试。',
+  },
+} as const;
