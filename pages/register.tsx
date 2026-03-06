@@ -756,7 +756,7 @@ export default function RegistrationPage() {
           </div>
         ) : null}
 
-        <div className="mb-5 rounded-2xl border border-[#cad8ea] bg-white/60 px-3 py-2 md:px-4">
+        <div className="mb-5 overflow-x-auto rounded-2xl border border-[#cad8ea] bg-white/60 px-3 py-2 md:px-4">
           <Steps current={step} responsive={false} size="small" items={stepItems} />
         </div>
 
@@ -771,7 +771,7 @@ export default function RegistrationPage() {
           <p className="mb-5 mt-1 text-sm text-[#62718f]">{t.sections[step].description}</p>
 
           {step === 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
               <Field fieldKey="email" label={t.labels.email} required={!isEditMode} error={errors.email ? t.errors[errors.email] || errors.email : ''}>
                 {isEditMode ? (
                   <div className="space-y-1.5">
@@ -821,7 +821,7 @@ export default function RegistrationPage() {
           ) : null}
 
           {step === 1 ? (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
               <div className="md:col-span-2">
                 <Field fieldKey="photos" label={t.labels.photos} required error={errors.photos ? t.errors[errors.photos] || errors.photos : ''}>
                   <div className="photo-wall">
@@ -1446,6 +1446,22 @@ export default function RegistrationPage() {
           border-color: #cad7ea !important;
           background: #fff !important;
           padding: 0 12px !important;
+        }
+        .form-input-ant.ant-input-affix-wrapper,
+        .form-input-ant .ant-input-affix-wrapper,
+        .form-select-ant,
+        .form-select-ant .ant-select-selector,
+        .location-cascader,
+        .location-cascader .ant-select-selector,
+        .ant-picker,
+        .ant-input,
+        .ant-input-affix-wrapper,
+        .ant-select,
+        .ant-cascader-picker {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          box-sizing: border-box !important;
         }
         @media (max-width: 768px) {
           .photo-wall .ant-upload-list-item-container,

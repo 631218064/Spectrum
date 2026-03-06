@@ -3,7 +3,7 @@
 ## 项目需求：Spectrum 注册表单实现
 
 ### 全局规则
-- **国际化**：所有界面文本需支持中英文，根据用户选择切换。`translations.ts` 文件需包含所有键值对。**所有描述文本、字段标签、选项、提示信息均需包含在内**。
+- **国际化**：所有界面文本需支持中英文，根据用户选择切换。注册表单文案统一维护在 `registrationTranslations.ts`（登录页文案在 `translations.ts`）。**所有描述文本、字段标签、选项、提示信息均需包含在内**。
 - **[key] 规则**：`[key]` 即下方表格中的 **字段ID**。
 - **必填**：所有字段均为必填/必选，提交前需验证；`custom` 类输入仅在选择 `custom` 后才必填。
 - **注释**：代码需包含必要注释，尤其是联动逻辑和数据处理部分。
@@ -28,6 +28,16 @@
 - 编辑模式点击跳转匹配界面（个人主页）/
 
 ---
+### 步骤条（当前实现）
+- 使用 Ant Design `Steps`，共 5 步，位于表单卡片顶部。
+- 图标路径：`/public/icon/account.svg`、`/public/icon/person.svg`、`/public/icon/dog.svg`、`/public/icon/love.svg`、`/public/icon/privacy.svg`。
+- 图标尺寸：`32px`（5 个图标统一）。
+- 标签展示：所有端均显示“图标 + 右侧短标签”（中/英随语言切换）。
+- Tooltip：悬停图标显示完整步骤名（中/英）。
+- 状态规则：当前步骤和已完成步骤使用原始色；未完成步骤与连线灰化。
+- 点击规则：仅允许点击“已完成步骤”回跳；未完成步骤不可点击。
+
+---
 ### 第一部分：创建账号
 **描述（需翻译）**：只需30秒，开启你的慢揭晓之旅。
 | 字段ID | 类型 | 标签（中/英） | 说明 | 验证规则 |
@@ -45,7 +55,7 @@
 
 | 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
 |--------|------|---------------|-------------|----------|
-| `photos` | 图片上传（照片墙） | 照片墙 / Photo Wall | 使用 Ant Design `Upload`（`listType=\"picture-card\"`），支持缩略图、删除、拖拽排序（按展示顺序存储） | 必填，1-10张；格式 JPG/PNG/HEIC；单张 <=10MB；第一张默认为主头像；描述：- 中文：第一张图将作为你的主头像。匹配过程中，每天会解锁一张新照片（Day1解锁第一张，Day2解锁第二张，...，Day5解锁剩余全部）。
+| `photos` | 图片上传（照片墙） | 照片墙 / Photo Wall | 位于“基础档案”模块描述下方、“昵称”上方，独占一行。使用 Ant Design `Upload`（`listType=\"picture-card\"`），支持缩略图、删除、拖拽排序（按展示顺序存储） | 必填，1-10张；格式 JPG/PNG/HEIC；单张 <=10MB；第一张默认为主头像；描述：- 中文：第一张图将作为你的主头像。匹配过程中，每天会解锁一张新照片（Day1解锁第一张，Day2解锁第二张，...，Day5解锁剩余全部）。
 - 英文：The first photo will be your main avatar. During matching, one new photo will be unlocked each day (Day 1: photo 1, Day 2: photo 2, ..., Day 5: all remaining photos).|
 | `nickname` | 文本输入 | 昵称 / Nickname | 用于匹配过程中显示 | 必填，1-20字符 |
 | `birthday` | 日期选择 | 出生日期 / Date of Birth | 选择年、月、日 | 必填，需为过去日期，且年龄 `18+`（北京时间） |
@@ -171,8 +181,6 @@
   "food_adventure": "mild_explorer",
   "conflict_reaction": "depends",
   "recharge_style": "alone_time",
-  "mystery_question": "猜猜我最不擅长什么运动？",
-  "mystery_answer": "羽毛球",
   "valued_traits": ["humor", "gentle", "custom"],
   "valued_traits_custom": "边界感",
   "relationship_goal": ["deep_connection", "stable_partner"],
@@ -183,8 +191,12 @@
   "contact_info": "wechat_abc123",
   "agree_terms": true
 }
-}
 ```
+
+**账号字段说明（当前实现）**：
+- `email` / `password` / `confirm_password` 仅用于注册流程的前端校验与 `supabase.auth.signUp`。
+- 资料落库到 `/api/profile` 的 payload 不包含上述 3 个字段。
+- 编辑模式显示只读邮箱（来自 Auth 用户信息），不显示密码相关字段。
 
 **location 条件结构**：
 - 当 `location.country = "CN"`：必须包含 `country` + `province` + `city`，且都不能为空。
@@ -250,6 +262,7 @@
 ### 草稿与编辑模式优先级
 - 注册模式：启用 localStorage 草稿恢复/自动保存。  
 - 编辑模式：优先加载服务端资料返显（不使用本地草稿覆盖）。
+- 当前实现：编辑模式不会读取本地草稿进行覆盖；但仍会触发自动保存逻辑到 localStorage。
 ---
 
 ### 注意事项
@@ -260,4 +273,6 @@
 - 所有 UI 展示文本（模块描述、选项文案、提示）均需纳入翻译。
 - `photos` 需在前后端同时校验格式与大小（JPG/PNG/HEIC，单张 <=10MB），并支持拖拽排序、预览与删除。
 - 前端交互需保证分步引导、错误提示、草稿防丢、移动端适配、步骤切换平滑动画与提交后的完成反馈。
+- 当前实现包含移动端/小窗口适配：页面避免上下黑边，表单控件统一 `width: 100%` + `max-width: 100%` + `min-width: 0`，防止输入框与选择器溢出。
+- `mystery_question` / `mystery_answer` 已停用（前后端不再读写）；数据库可暂保留列，不参与提交与渲染。
 - 文件统一 UTF-8 编码

@@ -32,10 +32,17 @@
 }
 
 /* 基础 body 样式（已在 Tailwind 中通过类设置，这里作为后备） */
+html,
+body,
+#__next {
+  min-height: 100%;
+}
+
 body {
-  background-color: #050505;
-  color: white;
+  background: linear-gradient(180deg, #f5f0e8 0%, #e8f0f8 100%);
+  color: #25324a;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  overflow-x: clip;
 }
 
 /* 彩虹渐变文本辅助类（可复用） */
