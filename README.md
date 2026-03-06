@@ -1,177 +1,211 @@
-```markdown
-# Spectrum 交友平台
+# Spectrum
 
-Spectrum 是一个面向女同性恋社群的“慢揭晓”式交友平台。不同于传统的即时匹配，Spectrum 通过五天的渐进式线索揭示，鼓励用户建立更深层次的情感连接。
+Spectrum 是一个基于 Next.js + Supabase 的「慢揭晓」交友平台。  
+核心机制是：匹配成功后按北京时间逐日解锁线索，第五天解锁联系方式。
 
-## ✨ 功能特点
+## 1. 项目现状与核心能力
+- 登录/注册/资料编辑（注册页与编辑页复用同一表单）。
+- 5 步注册表单（账号、基础档案、生活与感官、情感模式与期待、隐私与设置）。
+- 照片墙上传（1-10 张，拖拽排序，首图作为头像）。
+- 匹配请求与接受/忽略流程。
+- 每日消息窗口限制（按北京时间 08:00~次日 08:00，每人每 match 1 条）。
+- AI 线索生成（失败自动回退模板）。
+- 中英文切换（全局语言状态同步）。
+- Vercel Cron：每日推进解锁进度、清理过期邀约。
 
-- **5 天慢揭晓机制**：每天 8:00 解锁一条关于对方的神秘线索，第五天自动公开联系方式（微信/其他）。
-- **每日一条消息**：在等待揭晓的过程中，双方每天可互发一条消息，逐步增进了解。
-- **随时终止**：前四天内任何一方都可随时终止匹配，匹配立即失效，释放匹配名额。
-- **匹配限额**：每人每周最多同时进行 5 个匹配，避免滥用。
-- **AI 生成线索**（可选）：集成 DeepSeek API，根据双方填写的资料生成个性化的浪漫线索；若 AI 不可用，自动回退到模板库。
-- **双语支持**：中英文界面一键切换，吸引全球用户。
-- **隐私保护**：可开启“外貌滤镜”，将真实照片替换为卡通化版本，直到第五天才公开。
+## 2. 技术栈
+- 前端：Next.js 14、React 18、TypeScript
+- UI：Tailwind CSS、Ant Design、Framer Motion
+- 鉴权/数据/存储：Supabase Auth + PostgreSQL + Storage
+- 部署：Vercel
 
-## 🛠️ 技术栈
-
-- **前端框架**：Next.js 14 (React 18) + TypeScript
-- **样式**：Tailwind CSS + Framer Motion (动画)
-- **图标**：Lucide React
-- **后端 & 数据库**：Supabase (PostgreSQL, 认证, 存储)
-- **部署**：Vercel (前端 + API 路由)
-- **AI 服务**：DeepSeek API (可选)
-
-## 📁 项目结构
-
+## 3. 目录结构（当前实现）
+```text
+.
+├─ pages/
+│  ├─ index.tsx                    # 主页：未登录=Landing，已登录=MatchingDashboard
+│  ├─ register.tsx                 # 注册/编辑资料（/register 与 /register?mode=edit）
+│  ├─ auth/
+│  │  ├─ signin.tsx                # 登录页
+│  │  ├─ callback.tsx              # Auth 回调
+│  │  └─ confirm.tsx
+│  ├─ profile/edit.tsx             # 兼容编辑入口（当前主要走 /register?mode=edit）
+│  └─ api/
+│     ├─ profile.ts                # 资料读取/写入
+│     ├─ upload.ts                 # 照片上传
+│     ├─ matches/
+│     │  ├─ index.ts               # 拉取匹配主页数据
+│     │  ├─ request.ts             # 发起匹配
+│     │  ├─ respond.ts             # 接受/忽略邀约
+│     │  └─ [id]/
+│     │     ├─ message.ts          # 每日消息
+│     │     └─ terminate.ts        # 结束旅程
+│     ├─ location/
+│     │  ├─ countries.ts
+│     │  ├─ states/[countryId].ts
+│     │  └─ cities/[stateId].ts
+│     └─ cron/
+│        ├─ daily-reveal.ts        # 每日推进 day / day5 解锁
+│        └─ expire-requests.ts     # 过期邀约置为 expired
+├─ components/
+│  ├─ MatchingDashboard.tsx        # 匹配页（个人主页）主组件
+│  ├─ MatchGeneratingOverlay.tsx   # 匹配生成过渡层
+│  └─ AppPageLoader.tsx            # 通用页面加载层
+├─ lib/
+│  ├─ supabase.ts                  # 浏览器端 supabase client
+│  ├─ supabaseAdmin.ts             # 服务端 admin client
+│  ├─ registration.ts              # 注册表单 schema/校验/归一化
+│  ├─ registrationTranslations.ts  # 注册页文案（zh/en）
+│  ├─ matchingAlgorithm.ts         # 匹配打分逻辑
+│  ├─ matchingRulesEngine.ts       # 匹配硬筛和候选挑选
+│  ├─ matchRuntime.ts              # 匹配运行时（配额、快照、生成线索）
+│  ├─ ai.ts                        # AI 生成与翻译线索
+│  ├─ clueTemplates.ts             # AI 失败回退模板
+│  └─ apiLogger.ts                 # API 日志统一格式（带 requestId）
+├─ public/
+│  ├─ cities.json                  # 所在地级联数据
+│  └─ icon/*.svg                   # 注册步骤条图标
+├─ styles/globals.css
+├─ vercel.json
+├─ MatchingRules.md
+├─ MatchingPage.md
+├─ Registration-form.md
+├─ LoadingPage.md
+└─ LoggingPage.md
 ```
-spectrum/
-├── public/                # 静态资源
-├── styles/                # 全局样式
-├── lib/                   # 工具库
-│   ├── supabase.ts        # Supabase 客户端
-│   ├── storage.ts         # 文件上传
-│   ├── ai.ts              # AI 线索生成
-│   ├── clueTemplates.ts   # 线索模板回退
-│   ├── matchingAlgorithm.ts # 传统匹配算法
-│   └── translations.ts    # 多语言配置
-├── pages/                 # 页面和 API 路由
-│   ├── index.tsx          # 主页面 (Landing/Onboarding/Dashboard)
-│   ├── _app.tsx           # 全局组件
-│   ├── auth/              # 认证相关页面
-│   │   ├── signin.tsx
-│   │   └── callback.ts
-│   └── api/               # API 路由
-│       ├── profile.ts
-│       ├── matches/
-│       │   ├── index.ts
-│       │   ├── request.ts
-│       │   ├── respond.ts
-│       │   └── [id]/
-│       │       ├── message.ts
-│       │       └── terminate.ts
-│       └── cron/
-│           ├── daily-reveal.ts
-│           └── expire-requests.ts
-├── .env.example           # 环境变量示例
-├── .gitignore
-├── next.config.js
-├── tailwind.config.js
-├── postcss.config.js
-├── tsconfig.json
-├── package.json
-└── vercel.json            # Vercel 部署配置（含定时任务）
-```
 
-## 🚀 快速开始
+## 4. 关键业务流
 
-### 1. 克隆项目
+### 4.1 登录与主页路由
+1. 访问 `/`：
+   - 未登录：展示 Landing。
+   - 已登录：进入 `MatchingDashboard`。
+2. 若已登录但无资料：自动跳转 `/register`。
 
-```bash
-git clone https://github.com/yourusername/spectrum.git
-cd spectrum
-```
+### 4.2 注册流程（/register）
+1. 第 0 步创建账号：前端校验 email/password/confirm_password。
+2. 调用 `supabase.auth.signUp`。
+3. 若 signUp 未返回 session（线上常见），再尝试 `signInWithPassword` 获取 token。
+4. 使用 token 调 `/api/upload` 上传照片、调 `/api/profile` 入库资料。
+5. 成功后跳转 `/`（匹配界面）。
 
-### 2. 安装依赖
+### 4.3 编辑资料（/register?mode=edit）
+- 先拉取 `/api/profile` 返显。
+- 邮箱只读显示（来自 Auth user），密码字段不显示。
+- 仅提交资料字段，提交成功返回 `/`。
+- 资料变更仅影响未来匹配，已建立匹配使用快照数据不变。
 
+### 4.4 匹配请求与接受
+1. 发起：`POST /api/matches/request`。
+2. 接受/忽略：`POST /api/matches/respond`。
+3. 接受后创建 match + 生成线索（AI 优先，模板兜底）。
+4. 忽略会写入 `ignored_invitations`，7 天冷却过滤。
+
+## 5. 主要页面与入口
+- `/`：Landing + Dashboard 聚合页
+- `/auth/signin`：登录页
+- `/register`：注册
+- `/register?mode=edit`：编辑资料
+
+## 6. API 概览（当前）
+
+### 6.1 资料与上传
+- `GET /api/profile`：读取当前用户资料（需 `Authorization: Bearer <access_token>`）
+- `POST /api/profile`：写入资料（同上）
+- `POST /api/upload`：上传图片（multipart/form-data + bearer token）
+
+### 6.2 匹配
+- `GET /api/matches?lang=zh|en`：获取匹配页数据（quota/notifications/matches/me）
+- `POST /api/matches/request`：发起匹配请求
+- `POST /api/matches/respond`：接受/忽略请求
+- `POST /api/matches/[id]/message`：发消息（受每日窗口限制）
+- `POST /api/matches/[id]/terminate`：结束旅程
+
+### 6.3 Cron
+- `GET /api/cron/daily-reveal`
+- `GET /api/cron/expire-requests`
+- 两者都要求请求头：`Authorization: Bearer ${CRON_SECRET}`
+
+## 7. 环境变量
+
+从 `.env.example` 复制 `.env.local`，至少配置：
+
+| 变量 | 必填 | 说明 |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | 是 | Supabase 项目 URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 是 | 前端匿名 key |
+| `SUPABASE_SERVICE_ROLE_KEY` | 是 | 服务端 admin key |
+| `NEXT_PUBLIC_SITE_URL` | 建议 | 站点 URL |
+| `NEXTAUTH_URL` | 建议 | 部署域名 |
+| `NEXTAUTH_SECRET` | 建议 | 随机密钥 |
+| `CRON_SECRET` | 若启用 cron 必填 | 保护 cron 接口 |
+| `DEEPSEEK_API_KEY` | 可选 | AI 线索生成 key |
+| `DEEPSEEK_API_URL` | 可选 | 默认 deepseek chat/completions；方舟 responses 需填 responses 地址 |
+| `AI_CLUE_MODEL` | 可选 | AI 模型名 |
+| `AI_CLUE_ENABLED` | 可选 | 是否启用 AI（默认可在代码内兜底模板） |
+
+## 8. 本地开发
 ```bash
 npm install
-```
-
-### 3. 配置环境变量
-
-复制 `.env.example` 为 `.env.local`：
-
-```bash
-# Windows PowerShell
-copy .env.example .env.local
-```
-
-然后编辑 `.env.local`，填入你的 Supabase 项目信息和其他配置（见下方环境变量说明）。
-
-### 4. 设置 Supabase
-
-#### 创建 Supabase 项目
-- 登录 [Supabase](https://supabase.com) 并创建一个新项目。
-- 记下项目的 **URL** 和 **anon public key**（在 Project Settings → API 中）。
-
-#### 执行建表语句
-在 Supabase 的 SQL 编辑器中执行以下语句，创建所需的表：
-
-```sql
--- 执行项目提供的完整 SQL 建表脚本（见下方链接或代码文件）
--- 注意：包括 users、profiles、match_requests、matches、messages 等表
-```
-（建表脚本可在项目 `database/schema.sql` 中找到，或参考之前对话中的 SQL）
-
-#### 创建存储桶
-- 在 Supabase Storage 中创建一个名为 `profiles` 的公开存储桶，用于存放用户头像。
-- 设置存储桶的权限为允许公开读取（可通过设置 `public` 为 true）。
-
-### 5. 运行开发服务器
-
-```bash
 npm run dev
 ```
 
-访问 `http://localhost:3000` 即可看到应用。
+常用检查：
+```bash
+npx tsc --noEmit --incremental false
+npm run build
+```
 
-## ☁️ 部署到 Vercel
+## 9. 部署（Vercel + Supabase）
+1. 推送代码到 GitHub。
+2. Vercel 导入仓库。
+3. 在 Vercel Project Settings 配置环境变量（不要依赖 `vercel.json` 写死敏感值）。
+4. 确保 Supabase 表结构与当前代码一致（profiles/matches/match_requests/messages/ignored_invitations 等）。
+5. 部署后验证：
+   - 登录、注册、编辑资料
+   - 匹配请求与接受
+   - 线索加载与消息发送
+   - Cron 鉴权
 
-### 准备工作
-- 将代码推送到 GitHub 仓库。
-- 在 [Vercel](https://vercel.com) 中导入该仓库。
+## 10. 重要时区规则
+- 年龄校验与匹配解锁窗口按 `Asia/Shanghai`。
+- 消息窗口按北京时间每天 08:00 切换。
+- 体验期结束按“匹配成功后第二个北京时间 08:00 前”计算。
 
-### 环境变量配置
-在 Vercel 项目设置中添加以下环境变量（值与本地 `.env.local` 一致）：
+## 11. 常见问题排查
 
-| 变量名 | 说明 |
-|--------|------|
-| `NEXT_PUBLIC_SUPABASE_URL` | 你的 Supabase 项目 URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase 匿名密钥 |
-| `SUPABASE_SERVICE_ROLE_KEY` | 服务角色密钥（用于 API 路由） |
-| `NEXTAUTH_URL` | 你的 Vercel 部署域名（如 `https://spectrum.vercel.app`） |
-| `NEXTAUTH_SECRET` | 随机字符串（可使用 `openssl rand -base64 32` 生成） |
-| `DEEPSEEK_API_KEY` | （可选）DeepSeek API 密钥 |
-| `AI_CLUE_ENABLED` | `true` 或 `false`，是否启用 AI 生成线索 |
-| `CRON_SECRET` | （可选）保护定时任务的密钥 |
+### 11.1 `Invalid token`（/api/upload 或 /api/profile）
+- 确认前端提交使用的是当前会话 token（项目已修复 signUp 场景下 token 获取逻辑）。
+- 确认 `NEXT_PUBLIC_SUPABASE_URL / ANON_KEY / SERVICE_ROLE_KEY` 来自同一 Supabase 项目。
+- 确认请求头是 `Authorization: Bearer <token>`。
 
-### 定时任务
-如果项目中使用了 `vercel.json` 配置了 Cron 作业，Vercel 会自动触发。请确保在 `pages/api/cron/*` 的代码中验证 `Authorization` 头，防止未授权调用。
+### 11.2 线上图标不显示
+- 检查 `public/icon/*.svg` 是否入库。
+- 若 `git add public/icon` 被忽略，检查 `.gitignore` 是否有 `Icon` 误伤规则，需加白名单：
+  - `!public/icon/`
+  - `!public/icon/*.svg`
 
-## 🔧 环境变量说明
+### 11.3 表单字段报 schema cache 缺列
+- 说明线上 DB 结构与代码不一致。
+- 先迁移表结构，再重试提交。
 
-| 变量名 | 必填 | 说明 |
-|--------|------|------|
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase 项目 URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase 匿名密钥 |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | 服务角色密钥（仅后端使用） |
-| `NEXTAUTH_URL` | ✅ | 部署域名（用于回调） |
-| `NEXTAUTH_SECRET` | ✅ | 加密密钥（至少 32 字符） |
-| `DEEPSEEK_API_KEY` | ❌ | DeepSeek API 密钥 |
-| `AI_CLUE_ENABLED` | ❌ | 是否启用 AI 线索（默认为 false） |
-| `CRON_SECRET` | ❌ | 定时任务保护密钥 |
+## 12. 文档索引（业务规则）
+- 注册页规范：[Registration-form.md](./Registration-form.md)
+- 匹配规则：[MatchingRules.md](./MatchingRules.md)
+- 匹配页交互：[MatchingPage.md](./MatchingPage.md)
+- 加载页规范：[LoadingPage.md](./LoadingPage.md)
+- 日志规范：[LoggingPage.md](./LoggingPage.md)
 
-## 📝 自定义修改
-
-### 修改默认语言
-在 `next.config.js` 中修改 `i18n.defaultLocale` 为 `'zh'` 可默认显示中文。
-
-### 修改 AI 提示词
-在 `lib/ai.ts` 中调整 `prompt` 内容，可自定义线索生成的风格。
-
-### 调整匹配算法
-在 `lib/matchingAlgorithm.ts` 中修改 `calculateMatchScore` 函数，可自定义匹配规则。
-
-## 🤝 贡献指南
-
-欢迎提交 Issue 或 Pull Request。请确保代码遵循项目现有的风格，并通过测试。
-
-## 📄 许可证
-
-[MIT](LICENSE)
+## 13. 协作约定
+- 所有文档与源码统一 UTF-8。
+- 注册文案维护在 `lib/registrationTranslations.ts`。
+- 登录与主页文案维护在 `lib/translations.ts`。
+- 变更匹配逻辑时，同步更新 `MatchingRules.md` 与对应 API。
 
 ---
-
-**Happy coding!** 🌈
-```
+如需新同学快速接手，建议先按顺序阅读：
+1) `pages/index.tsx`  
+2) `components/MatchingDashboard.tsx`  
+3) `pages/register.tsx`  
+4) `pages/api/matches/*` + `lib/matchRuntime.ts`  
+5) `Registration-form.md` / `MatchingRules.md`
