@@ -7,6 +7,8 @@ import Cascader from 'antd/lib/cascader';
 import DatePicker from 'antd/lib/date-picker';
 import Input from 'antd/lib/input';
 import Select from 'antd/lib/select';
+import Steps from 'antd/lib/steps';
+import Tooltip from 'antd/lib/tooltip';
 import Upload from 'antd/lib/upload';
 import type { UploadFile, UploadProps } from 'antd/lib/upload/interface';
 import {
@@ -89,6 +91,11 @@ const ZODIAC_VALUES = [
 
 const DRAFT_KEY = 'spectrum_registration_draft_v1';
 const UPLOAD_LIST_IGNORE = (Upload as any).LIST_IGNORE;
+const STEP_ICON_PATHS = ['/icon/account.svg', '/icon/person.svg', '/icon/dog.svg', '/icon/love.svg', '/icon/privacy.svg'];
+const STEP_SHORT_LABELS: Record<'zh' | 'en', string[]> = {
+  zh: ['账号', '档案', '生活', '情感', '隐私'],
+  en: ['Account', 'Profile', 'Lifestyle', 'Emotion', 'Privacy'],
+};
 
 function cn(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(' ');
@@ -213,6 +220,54 @@ export default function RegistrationPage() {
 
   const t = registrationTranslations[lang];
   const isEditMode = router.query.mode === 'edit';
+  const stepItems = useMemo(
+    () =>
+      t.sections.map((section, index) => {
+        const isFinishedOrCurrent = index <= step;
+        const isClickable = index < step;
+        const shortLabel = STEP_SHORT_LABELS[lang][index] || section.title;
+        return {
+          title: (
+            <span
+              className={cn(
+                'text-xs font-semibold md:text-sm',
+                isFinishedOrCurrent ? 'text-[#3f4e6f]' : 'text-[#98a6bc]',
+                isClickable && 'cursor-pointer'
+              )}
+              onClick={() => {
+                if (!isClickable || submitState === 'submitting') return;
+                setStep(index);
+              }}
+            >
+              {shortLabel}
+            </span>
+          ),
+          icon: (
+            <Tooltip title={section.title}>
+              <span
+                className={cn(
+                  'inline-flex h-8 w-8 items-center justify-center rounded-full transition',
+                  isClickable && 'cursor-pointer'
+                )}
+                onClick={() => {
+                  if (!isClickable || submitState === 'submitting') return;
+                  setStep(index);
+                }}
+              >
+                <img
+                  src={STEP_ICON_PATHS[index]}
+                  alt={shortLabel}
+                  className={cn('h-8 w-8', !isFinishedOrCurrent && 'step-icon-muted')}
+                />
+              </span>
+            </Tooltip>
+          ),
+          disabled: !isClickable && index !== step,
+          className: isFinishedOrCurrent ? 'step-item-active' : 'step-item-inactive',
+        };
+      }),
+    [lang, step, submitState, t.sections]
+  );
   const handleLogoClick = () => {
     if (isEditMode) {
       router.push('/');
@@ -701,23 +756,8 @@ export default function RegistrationPage() {
           </div>
         ) : null}
 
-        <div className="mb-5 grid gap-3 md:grid-cols-7">
-          {t.sections.map((section, index) => (
-            <button
-              key={section.title}
-              type="button"
-              onClick={() => setStep(index)}
-              className={cn(
-                'rounded-2xl border px-3 py-2 text-left transition',
-                index === step
-                  ? 'border-transparent bg-gradient-to-r from-[#ff9364] via-[#d96cff] to-[#62d7ff] text-white'
-                  : 'border-[#cad8ea] bg-white/60'
-              )}
-            >
-              <p className="text-xs font-bold">{index + 1}</p>
-              <p className="text-sm font-semibold">{section.title}</p>
-            </button>
-          ))}
+        <div className="mb-5 rounded-2xl border border-[#cad8ea] bg-white/60 px-3 py-2 md:px-4">
+          <Steps current={step} responsive={false} size="small" items={stepItems} />
         </div>
 
         <motion.div
@@ -1300,6 +1340,30 @@ export default function RegistrationPage() {
         {submitState === 'error' ? <p className="mt-3 text-sm text-[#c54a78]">{t.submitFailed}</p> : null}
       </div>
       <style jsx global>{`
+        .ant-steps .ant-steps-item-icon {
+          background: transparent !important;
+          border: none !important;
+          width: 32px !important;
+          height: 32px !important;
+          margin-inline-end: 6px !important;
+          top: 0 !important;
+        }
+        .ant-steps .ant-steps-item-title {
+          line-height: 32px !important;
+          padding-right: 4px !important;
+        }
+        .ant-steps .ant-steps-item-tail::after {
+          height: 1px !important;
+          background-color: #cad8ea !important;
+          margin-top: -1px !important;
+        }
+        .ant-steps .ant-steps-item-finish .ant-steps-item-tail::after,
+        .ant-steps .ant-steps-item-process .ant-steps-item-tail::after {
+          background-color: #8fa7d6 !important;
+        }
+        .step-icon-muted {
+          filter: grayscale(1) saturate(0) opacity(0.48);
+        }
         .photo-wall .ant-upload-list {
           display: flex;
           flex-wrap: wrap;
