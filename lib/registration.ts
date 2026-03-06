@@ -30,8 +30,6 @@ export interface RegistrationFormData {
   food_adventure: string;
   conflict_reaction: string;
   recharge_style: string;
-  mystery_question: string;
-  mystery_answer: string;
   valued_traits: string[];
   valued_traits_custom: string;
   relationship_goal: string[];
@@ -72,8 +70,6 @@ const REQUIRED_STRING_FIELDS: Array<keyof RegistrationFormData> = [
   'food_adventure',
   'conflict_reaction',
   'recharge_style',
-  'mystery_question',
-  'mystery_answer',
   'contact_info',
 ];
 
@@ -102,8 +98,6 @@ export function emptyRegistrationFormData(): RegistrationFormData {
     food_adventure: '',
     conflict_reaction: '',
     recharge_style: '',
-    mystery_question: '',
-    mystery_answer: '',
     valued_traits: [],
     valued_traits_custom: '',
     relationship_goal: [],
@@ -172,8 +166,6 @@ export function normalizeRegistrationData(input: RegistrationFormData): Registra
     color_mood_custom: input.color_mood_custom.trim(),
     scent_memory_custom: input.scent_memory_custom.trim(),
     ritual_custom: input.ritual_custom.trim(),
-    mystery_question: input.mystery_question.trim(),
-    mystery_answer: input.mystery_answer.trim(),
     valued_traits_custom: input.valued_traits_custom.trim(),
     contact_info: input.contact_info.trim(),
   };
@@ -245,14 +237,6 @@ export function validateRegistrationForm(input: RegistrationFormData): Validatio
 
   if (data.relationship_goal.length < 1 || data.relationship_goal.length > RELATIONSHIP_GOAL_MAX) {
     errors.relationship_goal = 'size';
-  }
-
-  if (data.mystery_question.length > 50) {
-    errors.mystery_question = 'length';
-  }
-
-  if (data.mystery_answer.length > 100) {
-    errors.mystery_answer = 'length';
   }
 
   if (data.photos.length < PHOTOS_MIN_COUNT || data.photos.length > PHOTOS_MAX_COUNT) {

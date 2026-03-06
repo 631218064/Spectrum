@@ -22,6 +22,11 @@ import { supabase } from '@/lib/supabase';
 import { useGlobalLanguage } from '@/hooks/useGlobalLanguage';
 
 type ErrorMap = Record<string, string>;
+type AuthFormState = {
+  email: string;
+  password: string;
+  confirm_password: string;
+};
 
 interface CityNode {
   code: string;
@@ -197,6 +202,8 @@ export default function RegistrationPage() {
   const { lang, toggleLang } = useGlobalLanguage('zh');
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<RegistrationFormData>(emptyRegistrationFormData());
+  const [authForm, setAuthForm] = useState<AuthFormState>({ email: '', password: '', confirm_password: '' });
+  const [readonlyEmail, setReadonlyEmail] = useState('');
   const [errors, setErrors] = useState<ErrorMap>({});
   const [citiesData, setCitiesData] = useState<CitiesData | null>(null);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -270,6 +277,8 @@ export default function RegistrationPage() {
 
     const loadProfileForEdit = async () => {
       try {
+        const { data: userData } = await supabase.auth.getUser();
+        setReadonlyEmail(userData.user?.email || '');
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData.session?.access_token;
         if (!token) return;
@@ -328,6 +337,41 @@ export default function RegistrationPage() {
       }
       return changed ? next : prev;
     });
+  };
+
+  const clearAuthErrors = (keys: Array<keyof AuthFormState>) => {
+    clearFieldErrors(keys as string[]);
+  };
+
+  const validateAuthFields = (input: AuthFormState): ErrorMap => {
+    const next: ErrorMap = {};
+    const email = input.email.trim();
+    const password = input.password;
+    const confirm = input.confirm_password;
+
+    if (!email) {
+      next.email = 'required';
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+      next.email = 'email_invalid';
+    }
+
+    if (!password) {
+      next.password = 'required';
+    } else if (password.length < 8) {
+      next.password = 'password_too_short';
+    } else if (!/[A-Za-z]/.test(password)) {
+      next.password = 'password_missing_letter';
+    } else if (!/\d/.test(password)) {
+      next.password = 'password_missing_number';
+    }
+
+    if (!confirm) {
+      next.confirm_password = 'required';
+    } else if (confirm !== password) {
+      next.confirm_password = 'confirm_password_mismatch';
+    }
+
+    return next;
   };
 
   const syncPhotosToForm = (nextFileList: UploadFile[]) => {
@@ -401,6 +445,9 @@ export default function RegistrationPage() {
   };
 
   const findFirstErrorKey = (errorMap: Record<string, string>) => {
+    if (errorMap.email) return 'email';
+    if (errorMap.password) return 'password';
+    if (errorMap.confirm_password) return 'confirm_password';
     if (errorMap.location_province || errorMap.location_city) return 'location';
     const ordered = [
       'photos',
@@ -427,8 +474,6 @@ export default function RegistrationPage() {
       'food_adventure',
       'conflict_reaction',
       'recharge_style',
-      'mystery_question',
-      'mystery_answer',
       'valued_traits',
       'valued_traits_custom',
       'relationship_goal',
@@ -440,6 +485,9 @@ export default function RegistrationPage() {
 
   const getStepKeys = (currentStep: number, currentForm: RegistrationFormData): string[] => {
     if (currentStep === 0) {
+      return isEditMode ? [] : ['email', 'password', 'confirm_password'];
+    }
+    if (currentStep === 1) {
       return [
         'photos',
         'nickname',
@@ -453,37 +501,37 @@ export default function RegistrationPage() {
         'growth_environment',
         'financial_status',
         'education',
+      ];
+    }
+    if (currentStep === 2) {
+      return [
         'pet_preference',
         'hobbies',
         ...(currentForm.hobbies.includes('custom') ? ['hobbies_custom'] : []),
-      ];
-    }
-    if (currentStep === 1) {
-      return [
         'sound_preference',
         'color_mood',
         ...(currentForm.color_mood === 'custom' ? ['color_mood_custom'] : []),
         'scent_memory',
         ...(currentForm.scent_memory === 'custom' ? ['scent_memory_custom'] : []),
+        'ritual',
+        ...(currentForm.ritual === 'custom' ? ['ritual_custom'] : []),
+        'food_adventure',
       ];
     }
-    if (currentStep === 2) {
-      return ['ritual', ...(currentForm.ritual === 'custom' ? ['ritual_custom'] : []), 'food_adventure'];
-    }
     if (currentStep === 3) {
-      return ['conflict_reaction', 'recharge_style'];
-    }
-    if (currentStep === 4) {
-      return ['mystery_question', 'mystery_answer'];
-    }
-    if (currentStep === 5) {
-      return ['valued_traits', ...(currentForm.valued_traits.includes('custom') ? ['valued_traits_custom'] : []), 'relationship_goal'];
+      return [
+        'conflict_reaction',
+        'recharge_style',
+        'valued_traits',
+        ...(currentForm.valued_traits.includes('custom') ? ['valued_traits_custom'] : []),
+        'relationship_goal',
+      ];
     }
     return ['contact_info', 'agree_terms'];
   };
 
   const findErrorStep = (errorMap: Record<string, string>, currentForm: RegistrationFormData) => {
-    for (let s = 0; s <= 6; s += 1) {
+    for (let s = 0; s <= 4; s += 1) {
       const keys = getStepKeys(s, currentForm);
       if (keys.some((key) => Boolean(errorMap[key]))) return s;
     }
@@ -493,8 +541,61 @@ export default function RegistrationPage() {
   const submit = async () => {
     setSubmitState('submitting');
     try {
+      const preliminaryPayload = sanitizePayload({
+        ...form,
+        photos: fileList.map((file) => file.url || file.thumbUrl || '').filter(Boolean),
+      });
+
+      const result = validateRegistrationForm(preliminaryPayload);
+      const authErrors = !isEditMode ? validateAuthFields(authForm) : {};
+      const mergedErrors = { ...result.errors, ...authErrors };
+
+      if (Object.keys(mergedErrors).length > 0) {
+        setErrors(mergedErrors);
+        const firstKey = findFirstErrorKey(mergedErrors);
+        if (firstKey) {
+          const targetStep = findErrorStep(mergedErrors, preliminaryPayload);
+          setStep(targetStep);
+          setTimeout(() => scrollToField(firstKey), 0);
+        }
+        setSubmitState('error');
+        return;
+      }
+
+      let token = '';
       const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
+      token = sessionData.session?.access_token || '';
+
+      if (!isEditMode) {
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: authForm.email.trim(),
+          password: authForm.password,
+        });
+        if (signUpError) {
+          const msg = String(signUpError.message || '').toLowerCase();
+          if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
+            setErrors((prev) => ({ ...prev, email: 'email_registered' }));
+            setStep(0);
+            setTimeout(() => scrollToField('email'), 0);
+          } else {
+            setTip(signUpError.message || t.submitFailed);
+          }
+          setSubmitState('error');
+          return;
+        }
+        token = signUpData.session?.access_token || token;
+        if (!token) {
+          const { data: refreshed } = await supabase.auth.getSession();
+          token = refreshed.session?.access_token || '';
+        }
+      }
+
+      if (!token) {
+        setTip(t.errors.auth_session_missing || t.submitFailed);
+        setSubmitState('error');
+        return;
+      }
+
       const orderedPhotoUrls: string[] = [];
       for (const file of fileList) {
         let resolvedUrl = file.url || file.thumbUrl || '';
@@ -504,7 +605,7 @@ export default function RegistrationPage() {
           const uploadResp = await fetch('/api/upload', {
             method: 'POST',
             body,
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            headers: { Authorization: `Bearer ${token}` },
           });
           if (uploadResp.ok) {
             const uploadResult = (await uploadResp.json()) as { url?: string };
@@ -519,24 +620,6 @@ export default function RegistrationPage() {
         photos: orderedPhotoUrls,
       });
 
-      const result = validateRegistrationForm(payload);
-      if (!result.isValid) {
-        setErrors(result.errors);
-        const firstKey = findFirstErrorKey(result.errors);
-        if (firstKey) {
-          const targetStep = findErrorStep(result.errors, payload);
-          setStep(targetStep);
-          setTimeout(() => scrollToField(firstKey), 0);
-        }
-        setSubmitState('error');
-        return;
-      }
-
-      // 褰撳墠椤圭洰鍚庣灏氭湭鍒囨崲鍒版柊 schema锛屽厛杈撳嚭鏈€缁?payload锛屽悗缁鎺ユ柊 API銆?
-      if (!token) {
-        setSubmitState('error');
-        return;
-      }
       const resp = await fetch('/api/profile', {
         method: 'POST',
         headers: {
@@ -565,9 +648,11 @@ export default function RegistrationPage() {
     const payload = sanitizePayload(form);
     const result = validateRegistrationForm(payload);
     const stepKeys = getStepKeys(step, payload);
+    const authErrors = step === 0 && !isEditMode ? validateAuthFields(authForm) : {};
     const nextErrors: Record<string, string> = {};
     for (const key of stepKeys) {
-      if (result.errors[key]) nextErrors[key] = result.errors[key];
+      if (authErrors[key]) nextErrors[key] = authErrors[key];
+      else if (result.errors[key]) nextErrors[key] = result.errors[key];
     }
     setErrors((prev) => {
       const merged = { ...prev };
@@ -575,13 +660,13 @@ export default function RegistrationPage() {
       return { ...merged, ...nextErrors };
     });
 
-    const firstStepErrorKey = stepKeys.find((key) => Boolean(result.errors[key]));
+    const firstStepErrorKey = stepKeys.find((key) => Boolean(nextErrors[key]));
     if (firstStepErrorKey) {
       scrollToField(firstStepErrorKey === 'location_province' || firstStepErrorKey === 'location_city' ? 'location' : firstStepErrorKey);
       return;
     }
 
-    if (step < 6) setStep((prev) => prev + 1);
+    if (step < 4) setStep((prev) => prev + 1);
   };
 
   return (
@@ -616,47 +701,6 @@ export default function RegistrationPage() {
           </div>
         ) : null}
 
-        <div className="mb-6">
-          <Field fieldKey="photos" label={t.labels.photos} required error={errors.photos ? t.errors[errors.photos] || errors.photos : ''}>
-            <div className="photo-wall">
-              <Upload
-                accept=".jpg,.jpeg,.png,.heic,.heif,image/jpeg,image/png,image/heic,image/heif"
-                listType="picture-card"
-                fileList={fileList}
-                beforeUpload={handleBeforeUpload}
-                onChange={handleUploadChange}
-                itemRender={(originNode, file) => {
-                  const currentIndex = fileList.findIndex((item) => item.uid === file.uid);
-                  return (
-                    <div
-                      draggable
-                      onDragStart={() => setDraggingUid(file.uid)}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={() => {
-                        if (!draggingUid) return;
-                        const fromIndex = fileList.findIndex((item) => item.uid === draggingUid);
-                        moveFile(fromIndex, currentIndex);
-                        setDraggingUid(null);
-                      }}
-                      className="cursor-move"
-                    >
-                      {originNode}
-                    </div>
-                  );
-                }}
-              >
-                {fileList.length >= PHOTOS_MAX_COUNT ? null : (
-                  <button type="button" className="flex h-full w-full flex-col items-center justify-center border-0 bg-transparent">
-                    <PlusOutlined style={{ color: '#4658E1' }} />
-                    <div className="mt-2 text-xs text-[#4658E1]">Upload</div>
-                  </button>
-                )}
-              </Upload>
-            </div>
-          </Field>
-          <p className="mt-2 text-[14px] text-[#7E8C9D]">{t.photoWallHint}</p>
-        </div>
-
         <div className="mb-5 grid gap-3 md:grid-cols-7">
           {t.sections.map((section, index) => (
             <button
@@ -688,6 +732,96 @@ export default function RegistrationPage() {
 
           {step === 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
+              <Field fieldKey="email" label={t.labels.email} required={!isEditMode} error={errors.email ? t.errors[errors.email] || errors.email : ''}>
+                {isEditMode ? (
+                  <div className="space-y-1.5">
+                    <Input value={readonlyEmail} disabled className="form-input-ant w-full" />
+                    <p className="text-xs text-[#7E8C9D]">{t.placeholders.email_readonly_hint}</p>
+                  </div>
+                ) : (
+                  <Input
+                    type="email"
+                    value={authForm.email}
+                    onChange={(e) => {
+                      setAuthForm((prev) => ({ ...prev, email: e.target.value }));
+                      clearAuthErrors(['email']);
+                    }}
+                    placeholder={t.placeholders.email}
+                    className="form-input-ant w-full"
+                  />
+                )}
+              </Field>
+              {!isEditMode ? (
+                <>
+                  <Field fieldKey="password" label={t.labels.password} required error={errors.password ? t.errors[errors.password] || errors.password : ''}>
+                    <Input.Password
+                      value={authForm.password}
+                      onChange={(e) => {
+                        setAuthForm((prev) => ({ ...prev, password: e.target.value }));
+                        clearAuthErrors(['password', 'confirm_password']);
+                      }}
+                      placeholder={t.placeholders.password}
+                      className="form-input-ant w-full"
+                    />
+                  </Field>
+                  <Field fieldKey="confirm_password" label={t.labels.confirm_password} required error={errors.confirm_password ? t.errors[errors.confirm_password] || errors.confirm_password : ''}>
+                    <Input.Password
+                      value={authForm.confirm_password}
+                      onChange={(e) => {
+                        setAuthForm((prev) => ({ ...prev, confirm_password: e.target.value }));
+                        clearAuthErrors(['confirm_password']);
+                      }}
+                      placeholder={t.placeholders.confirm_password}
+                      className="form-input-ant w-full"
+                    />
+                  </Field>
+                </>
+              ) : null}
+            </div>
+          ) : null}
+
+          {step === 1 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <Field fieldKey="photos" label={t.labels.photos} required error={errors.photos ? t.errors[errors.photos] || errors.photos : ''}>
+                  <div className="photo-wall">
+                    <Upload
+                      accept=".jpg,.jpeg,.png,.heic,.heif,image/jpeg,image/png,image/heic,image/heif"
+                      listType="picture-card"
+                      fileList={fileList}
+                      beforeUpload={handleBeforeUpload}
+                      onChange={handleUploadChange}
+                      itemRender={(originNode, file) => {
+                        const currentIndex = fileList.findIndex((item) => item.uid === file.uid);
+                        return (
+                          <div
+                            draggable
+                            onDragStart={() => setDraggingUid(file.uid)}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={() => {
+                              if (!draggingUid) return;
+                              const fromIndex = fileList.findIndex((item) => item.uid === draggingUid);
+                              moveFile(fromIndex, currentIndex);
+                              setDraggingUid(null);
+                            }}
+                            className="cursor-move"
+                          >
+                            {originNode}
+                          </div>
+                        );
+                      }}
+                    >
+                      {fileList.length >= PHOTOS_MAX_COUNT ? null : (
+                        <button type="button" className="flex h-full w-full flex-col items-center justify-center border-0 bg-transparent">
+                          <PlusOutlined style={{ color: '#4658E1' }} />
+                          <div className="mt-2 text-xs text-[#4658E1]">Upload</div>
+                        </button>
+                      )}
+                    </Upload>
+                  </div>
+                </Field>
+                <p className="mt-2 text-[14px] text-[#7E8C9D]">{t.photoWallHint}</p>
+              </div>
               <Field fieldKey="nickname" label={t.labels.nickname} required error={errors.nickname ? t.errors[errors.nickname] : ''}>
                 <Input
                   className="form-input-ant w-full"
@@ -929,7 +1063,7 @@ export default function RegistrationPage() {
             </div>
           ) : null}
 
-          {step === 1 ? (
+          {step === 2 ? (
             <div className="space-y-4">
               <Field fieldKey="sound_preference" label={t.labels.sound_preference} required error={errors.sound_preference ? t.errors[errors.sound_preference] : ''}>
                 <ChoiceGroup
@@ -991,11 +1125,6 @@ export default function RegistrationPage() {
                   />
                 </Field>
               ) : null}
-            </div>
-          ) : null}
-
-          {step === 2 ? (
-            <div className="space-y-4">
               <Field fieldKey="ritual" label={t.labels.ritual} required error={errors.ritual ? t.errors[errors.ritual] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.ritual)}
@@ -1057,40 +1186,6 @@ export default function RegistrationPage() {
                   labels={t.options.recharge_style}
                 />
               </Field>
-            </div>
-          ) : null}
-
-          {step === 4 ? (
-            <div className="space-y-4">
-              <Field fieldKey="mystery_question" label={t.labels.mystery_question} required error={errors.mystery_question ? t.errors[errors.mystery_question] : ''}>
-                <input
-                  value={form.mystery_question}
-                  onChange={(e) => {
-                    setField('mystery_question', e.target.value);
-                    clearFieldErrors(['mystery_question']);
-                  }}
-                  maxLength={50}
-                  placeholder={t.placeholders.mystery_question}
-                  className="w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                />
-              </Field>
-              <Field fieldKey="mystery_answer" label={t.labels.mystery_answer} required error={errors.mystery_answer ? t.errors[errors.mystery_answer] : ''}>
-                <textarea
-                  value={form.mystery_answer}
-                  onChange={(e) => {
-                    setField('mystery_answer', e.target.value);
-                    clearFieldErrors(['mystery_answer']);
-                  }}
-                  maxLength={100}
-                  placeholder={t.placeholders.mystery_answer}
-                  className="min-h-[92px] w-full rounded-xl border border-[#cad7ea] bg-white px-3 py-2.5 outline-none ring-[#97c1ff] focus:ring"
-                />
-              </Field>
-            </div>
-          ) : null}
-
-          {step === 5 ? (
-            <div className="space-y-4">
               <Field fieldKey="valued_traits" label={t.labels.valued_traits} required error={errors.valued_traits ? t.errors[errors.valued_traits] : ''}>
                 <ChoiceGroup
                   values={Object.keys(t.options.valued_traits)}
@@ -1133,7 +1228,7 @@ export default function RegistrationPage() {
             </div>
           ) : null}
 
-          {step === 6 ? (
+          {step === 4 ? (
             <div className="space-y-4">
               <Field fieldKey="contact_info" label={t.labels.contact_info} required error={errors.contact_info ? t.errors[errors.contact_info] : ''}>
                 <input
@@ -1178,7 +1273,7 @@ export default function RegistrationPage() {
             >
               {t.prev}
             </button>
-            {step < 6 ? (
+            {step < 4 ? (
               <button
                 type="button"
                 onClick={validateAndNext}

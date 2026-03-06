@@ -28,26 +28,25 @@
 - 编辑模式点击跳转匹配界面（个人主页）/
 
 ---
-
-### 照片墙（新增，位于第一部分上方）
-**描述（需翻译）**：
-- 中文：第一张图将作为你的主头像。匹配过程中，每天会解锁一张新照片（Day1解锁第一张，Day2解锁第二张，...，Day5解锁剩余全部）。
-- 英文：The first photo will be your main avatar. During matching, one new photo will be unlocked each day (Day 1: photo 1, Day 2: photo 2, ..., Day 5: all remaining photos).
-
-| 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
-|--------|------|---------------|-------------|----------|
-| `photos` | 图片上传（照片墙） | 照片墙 / Photo Wall | 使用 Ant Design `Upload`（`listType=\"picture-card\"`），支持缩略图、删除、拖拽排序（按展示顺序存储） | 必填，1-10张；格式 JPG/PNG/HEIC；单张 <=10MB；第一张默认为主头像 |
-
+### 第一部分：创建账号
+**描述（需翻译）**：只需30秒，开启你的慢揭晓之旅。
+| 字段ID | 类型 | 标签（中/英） | 说明 | 验证规则 |
+|--------|------|---------------|------|----------|
+| `email` | 文本输入 | 邮箱 / Email | 用于登录 | 必填，邮箱格式，后端唯一 |
+| `password` | 密码输入 | 密码 / Password | 至少8位，含字母和数字 | 必填，长度≥8，至少一个字母和一个数字 |
+| `confirm_password` | 密码输入 | 确认密码 / Confirm Password | 再次输入密码 | 必填，与 password 一致 |
 
 ---
 
-### 第一部分：基础档案  
+### 第二部分：基础档案  
 **描述（需翻译）**：  
 - 中文：这一部分帮助我们构建你的基本画像，也是生成线索的底色。  
 - 英文：This section helps us build your basic profile—the foundation for generating clues.
 
 | 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
 |--------|------|---------------|-------------|----------|
+| `photos` | 图片上传（照片墙） | 照片墙 / Photo Wall | 使用 Ant Design `Upload`（`listType=\"picture-card\"`），支持缩略图、删除、拖拽排序（按展示顺序存储） | 必填，1-10张；格式 JPG/PNG/HEIC；单张 <=10MB；第一张默认为主头像；描述：- 中文：第一张图将作为你的主头像。匹配过程中，每天会解锁一张新照片（Day1解锁第一张，Day2解锁第二张，...，Day5解锁剩余全部）。
+- 英文：The first photo will be your main avatar. During matching, one new photo will be unlocked each day (Day 1: photo 1, Day 2: photo 2, ..., Day 5: all remaining photos).|
 | `nickname` | 文本输入 | 昵称 / Nickname | 用于匹配过程中显示 | 必填，1-20字符 |
 | `birthday` | 日期选择 | 出生日期 / Date of Birth | 选择年、月、日 | 必填，需为过去日期，且年龄 `18+`（北京时间） |
 | `gender` | 单选 | 性别 / Gender | `male`（男 / Male）<br>`female`（女 / Female）<br>`non_binary`（非二元 / Non-binary）<br>`prefer_not_to_say`（不愿透露 / Prefer not to say） | 必选 |
@@ -58,8 +57,22 @@
 | `growth_environment` | 单选 | 成长环境 / Childhood Environment | `happy_family`（家庭幸福 / Happy family）<br>`independent`（独立成长 / Independent）<br>`complex`（情况复杂 / Complex）<br>`prefer_not_to_say`（不想说 / Prefer not to say） | 必选 |
 | `financial_status` | 单选 | 经济情况 / Financial Status | `student`（学生 / Student）<br>`employed`（上班族 / Employed）<br>`self_employed`（自由职业 / Self-employed）<br>`prefer_not_to_say`（不想说 / Prefer not to say） | 必选 |
 | `education` | 单选 | 学历 / Education | `high_school`（高中及以下 / High school or below）<br>`associate`（专科 / Associate degree）<br>`bachelor`（本科 / Bachelor‘s degree）<br>`master`（硕士 / Master’s degree）<br>`doctor`（博士 / Doctorate）<br>`prefer_not_to_say`（不想说 / Prefer not to say） | 必选 |
-| `pet_preference` | 单选 | 宠物偏好 / Pet Preference | `cat`（猫派 / Cat person）<br>`dog`（狗派 / Dog person）<br>`other_pet`（其他小动物派 / Other small pets）<br>`no_pet_now`（目前没养，但对宠物无感 / Don't have one now, but fine with pets）<br>`allergic`（对动物过敏或害怕 / Allergic or afraid） | 必选 |
+
+---
+
+### 第三部分：生活与感官
+- 中文：这些微小而确定的习惯，是你感知世界的方式。
+- 英文：These small, certain habits are how you perceive the world.
+
+| 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
+|--------|------|---------------|-------------|----------|
 | `hobbies` | 多选（最多5项） | 兴趣爱好 / Hobbies | 选项见下方列表，含 `custom`（需输入框） | 至少1项，最多5项；`custom` 计入上限 |
+| `pet_preference` | 单选 | 宠物偏好 / Pet Preference | `cat`（猫派 / Cat person）<br>`dog`（狗派 / Dog person）<br>`other_pet`（其他小动物派 / Other small pets）<br>`no_pet_now`（目前没养，但对宠物无感 / Don't have one now, but fine with pets）<br>`allergic`（对动物过敏或害怕 / Allergic or afraid） | 必选 |
+| `ritual` | 单选+自定义 | 你的微小仪式感 / Your Little Ritual | `wipe_cup`<br>`couch_5min`<br>`prepare_clothes`<br>`music_shower`<br>`no_ritual`<br>`custom` | 必选；选 `custom` 时 `ritual_custom` 必填 |
+| `food_adventure` | 单选 | 味觉冒险地图 / Food Adventure Style | `safe_guard`<br>`mild_explorer`<br>`extreme_explorer`<br>`survival` | 必选 |
+| `sound_preference` | 单选 | 声音的偏好 / Sound Preference | `rain_fireplace`（雨天白噪音或壁炉声）<br>`cafe_clatter`（咖啡馆交谈与杯碟声）<br>`instrumental`（钢琴或小提琴纯器乐）<br>`livehouse_rap`（Livehouse Rap） | 必选 |
+| `color_mood` | 单选+自定义 | 色彩的共鸣 / Color Resonance | `warm_gold`<br>`calm_blue`<br>`chaotic_gray`<br>`mysterious_purple`<br>`custom` | 必选；选 `custom` 时 `color_mood_custom` 必填 |
+| `scent_memory` | 单选+自定义 | 气味记忆 / Scent Memory | `home_cooking`<br>`rain_grass`<br>`old_books`<br>`pool_sea`<br>`perfume`<br>`not_sensitive`<br>`custom` | 必选；选 `custom` 时 `scent_memory_custom` 必填 |
 
 **兴趣爱好选项**（键值对应）：
 - `reading_writing`：阅读/写作 / Reading & Writing
@@ -76,68 +89,21 @@
 
 ---
 
-### 第二部分：感官与直觉  
+### 第四部分：情感模式与期待
 **描述（需翻译）**：  
-- 中文：这些问题没有对错，只有你独特的感知世界的方式。它们会成为线索的灵感来源。  
-- 英文：There are no right or wrong answers—only your unique way of perceiving the world. These will inspire the clues.
-
-| 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
-|--------|------|---------------|-------------|----------|
-| `sound_preference` | 单选 | 声音的偏好 / Sound Preference | `rain_fireplace`（雨天白噪音或壁炉声）<br>`cafe_clatter`（咖啡馆交谈与杯碟声）<br>`instrumental`（钢琴或小提琴纯器乐）<br>`livehouse_rap`（Livehouse Rap） | 必选 |
-| `color_mood` | 单选+自定义 | 色彩的共鸣 / Color Resonance | `warm_gold`<br>`calm_blue`<br>`chaotic_gray`<br>`mysterious_purple`<br>`custom` | 必选；选 `custom` 时 `color_mood_custom` 必填 |
-| `scent_memory` | 单选+自定义 | 气味记忆 / Scent Memory | `home_cooking`<br>`rain_grass`<br>`old_books`<br>`pool_sea`<br>`perfume`<br>`not_sensitive`<br>`custom` | 必选；选 `custom` 时 `scent_memory_custom` 必填 |
-
----
-
-### 第三部分：生活仪式感与“怪癖”  
-**描述（需翻译）**：  
-- 中文：正是这些微小而确定的习惯，构成了独一无二的你。
-- 英文：It's these small, definite habits that make you uniquely you.
-
-| 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
-|--------|------|---------------|-------------|----------|
-| `ritual` | 单选+自定义 | 你的微小仪式感 / Your Little Ritual | `wipe_cup`<br>`couch_5min`<br>`prepare_clothes`<br>`music_shower`<br>`no_ritual`<br>`custom` | 必选；选 `custom` 时 `ritual_custom` 必填 |
-| `food_adventure` | 单选 | 味觉冒险地图 / Food Adventure Style | `safe_guard`<br>`mild_explorer`<br>`extreme_explorer`<br>`survival` | 必选 |
-
----
-
-### 第四部分：关系信念与情感模式  
-**描述（需翻译）**：  
-- 中文：我们对待亲密关系的方式，往往藏在一些瞬间的选择里。这部分将帮助我们寻找与你情感节奏同频的人。  
-- 英文：How we approach intimacy is often revealed in split-second choices. This section helps us find someone who syncs with your emotional rhythm.
+- 中文：我们对待亲密关系的方式，往往藏在一些瞬间的选择里。
+- 英文：How we approach intimacy is often revealed in split-second choices.
 
 | 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
 |--------|------|---------------|-------------|----------|
 | `conflict_reaction` | 单选 | 冲突之后的你 / After a Conflict | `need_space`<br>`talk_immediately`<br>`pretend_fine`<br>`depends` | 必选 |
 | `recharge_style` | 单选 | 爱的充电站 / Recharge Style | `deep_talk`<br>`alone_time`<br>`quality_time`<br>`friends_social` | 必选 |
-
----
-
-### 第五部分：留给未来的 TA  
-**描述（需翻译）**：  
-- 中文：这是你亲手种下的彩蛋。给未来的匹配对象留一个无伤大雅的小谜题，这个问题将在第一天解锁。  
-- 英文：This is your personal easter egg. Leave a lighthearted riddle for your future match—it will be unlocked on the first day.
-
-| 字段ID | 类型 | 标签（中/英） | 说明 | 验证规则 |
-|--------|------|---------------|------|----------|
-| `mystery_question` | 文本输入 | 我的谜题 / My Mystery Question | 开放式问题 | 必填，不超过50字 |
-| `mystery_answer` | 文本输入 | 我的答案 / My Answer | 该问题答案，仅系统可见 | 必填，不超过100字 |
-
----
-
-### 第六部分：理想型与期待  
-**描述（需翻译）**：  
-- 中文：虽然我们相信真爱超越条条框框，但你的偏好能帮助我们更精准地推荐。  
-- 英文：While we believe true love transcends checkboxes, your preferences help us make more accurate recommendations.
-
-| 字段ID | 类型 | 标签（中/英） | 选项 / 说明 | 验证规则 |
-|--------|------|---------------|-------------|----------|
 | `valued_traits` | 多选（最多3项） | 最看重的三个特质 / Top 3 Valued Traits | `humor`<br>`gentle`<br>`ambitious`<br>`intelligent`<br>`independent`<br>`romantic`<br>`sincere`<br>`patient`<br>`loves_life`<br>`good_looking`<br>`financially_stable`<br>`loves_animals`<br>`family_oriented`<br>`custom` | 至少1项，最多3项；`custom` 计入上限；选 `custom` 时 `valued_traits_custom` 必填 |
 | `relationship_goal` | 多选（最多2项） | 你期待在关系中收获什么（最多选两项） / What are you looking for? (max 2) | `stable_partner`<br>`deep_connection`<br>`playmate`<br>`healing`<br>`no_expectations` | 至少1项，最多2项 |
 
 ---
 
-### 第七部分：隐私与设置  
+### 第五部分：隐私与设置  
 **描述（需翻译）**：  
 - 中文：只给对的人，解锁联系你的途径。  
 - 英文：Only for the right people, unlock the way to contact you.
@@ -216,9 +182,7 @@
   ],
   "contact_info": "wechat_abc123",
   "agree_terms": true
-}，
-  "contact_info": "wechat_abc123",
-  "agree_terms": true
+}
 }
 ```
 
