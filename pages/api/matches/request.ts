@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { createMatchAndClues, getQuotaInfo } from '@/lib/matchRuntime';
 import { pickTopCandidate, type ProfileForMatch } from '@/lib/matchingRulesEngine';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getRequestId, logApiError, logApiWarn } from '@/lib/apiLogger';
 
 function extractOtherUserId(row: any, me: string) {
   if (row.user1_id && row.user2_id) return row.user1_id === me ? row.user2_id : row.user1_id;
@@ -11,19 +12,23 @@ function extractOtherUserId(row: any, me: string) {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const requestId = getRequestId(req);
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed', requestId });
 
   const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'Missing authorization' });
+  if (!authHeader) return res.status(401).json({ error: 'Missing authorization', requestId });
   const token = authHeader.split(' ')[1];
   const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
   const user = authData.user;
-  if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
+  if (authError || !user) {
+    logApiWarn(req, requestId, 'Invalid token in match request API', { authError: authError?.message });
+    return res.status(401).json({ error: 'Invalid token', requestId });
+  }
 
   try {
     const quota = await getQuotaInfo(user.id);
     if (quota.remaining <= 0) {
-      return res.status(400).json({ error: 'Weekly quota reached' });
+      return res.status(400).json({ error: 'Weekly quota reached', requestId });
     }
 
     const { data: me, error: meError } = await supabaseAdmin
@@ -31,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select('*')
       .eq('id', user.id)
       .single();
-    if (meError || !me) return res.status(400).json({ error: 'Profile not found' });
+    if (meError || !me) return res.status(400).json({ error: 'Profile not found', requestId });
 
     const nowIso = new Date().toISOString();
     const recent30Iso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -85,7 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const candidates = ((allProfilesResp.data || []) as ProfileForMatch[]).filter((p) => p.id !== user.id && !blocked.has(p.id));
     const top = pickTopCandidate(me as ProfileForMatch, candidates);
-    if (!top) return res.status(404).json({ error: 'No new matches available' });
+    if (!top) return res.status(404).json({ error: 'No new matches available', requestId });
 
     const reverse = (reverseResp.data || []).find((r) => r.from_user_id === top.profile.id);
     if (reverse) {
@@ -110,6 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       score: top.score,
     });
   } catch (err: any) {
-    return res.status(500).json({ error: err.message || 'Request failed' });
+    logApiError(req, requestId, err, { userId: user.id });
+    return res.status(500).json({ error: err.message || 'Request failed', requestId });
   }
 }

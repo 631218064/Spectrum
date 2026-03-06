@@ -6,6 +6,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { uploadProfilePhoto } from '@/lib/storage';
 import formidable, { type Fields, type Files } from 'formidable';
 import fs from 'fs';
+import { getRequestId, logApiError, logApiWarn } from '@/lib/apiLogger';
 
 export const config = {
   api: {
@@ -14,26 +15,31 @@ export const config = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const requestId = getRequestId(req);
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method not allowed', requestId });
   }
 
   const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'Missing authorization' });
+  if (!authHeader) return res.status(401).json({ error: 'Missing authorization', requestId });
   const token = authHeader.split(' ')[1];
 
   const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-  if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
+  if (authError || !user) {
+    logApiWarn(req, requestId, 'Invalid token in upload API', { authError: authError?.message });
+    return res.status(401).json({ error: 'Invalid token', requestId });
+  }
 
   const form = formidable({ multiples: false });
   form.parse(req, async (err: Error | null, _fields: Fields, files: Files) => {
     if (err) {
-      return res.status(500).json({ error: 'Upload parse error' });
+      logApiError(req, requestId, err, { userId: user.id, phase: 'form_parse' });
+      return res.status(500).json({ error: 'Upload parse error', requestId });
     }
 
     const file = Array.isArray(files.file) ? files.file[0] : files.file;
     if (!file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      return res.status(400).json({ error: 'No file uploaded', requestId });
     }
 
     try {
@@ -58,8 +64,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       return res.status(200).json({ url: publicUrl });
     } catch (uploadErr: any) {
-      console.error('Upload error:', uploadErr);
-      return res.status(500).json({ error: uploadErr.message });
+      logApiError(req, requestId, uploadErr, { userId: user.id, phase: 'upload_to_storage' });
+      return res.status(500).json({ error: uploadErr.message, requestId });
     }
   });
 }

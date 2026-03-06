@@ -1,14 +1,13 @@
-// pages/api/cron/expire-requests.ts
-// 定时任务：每小时执行，将过期的匹配请求标记为 expired
-
-import { NextApiRequest, NextApiResponse } from 'next';
+﻿import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getRequestId, logApiError } from '@/lib/apiLogger';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const requestId = getRequestId(req);
   const authHeader = req.headers.authorization;
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(401).json({ error: 'Unauthorized', requestId });
   }
 
   try {
@@ -22,9 +21,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error) throw error;
 
-    return res.status(200).json({ expired: data?.length || 0 });
+    return res.status(200).json({ expired: data?.length || 0, requestId });
   } catch (err: any) {
-    console.error('Expire requests error:', err);
-    return res.status(500).json({ error: err.message });
+    logApiError(req, requestId, err);
+    return res.status(500).json({ error: err.message, requestId });
   }
 }

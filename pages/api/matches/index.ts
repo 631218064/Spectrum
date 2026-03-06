@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { generateCluesForMatch } from '@/lib/matchRuntime';
 import { getNextUnlockAt, getQuotaInfo, getSecondBeijingEightAfter, isInTrialPeriod } from '@/lib/matchRuntime';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getRequestId, logApiError, logApiWarn } from '@/lib/apiLogger';
 
 function parseMaybeJson(value: any) {
   if (value == null) return value;
@@ -53,14 +54,18 @@ function hasViewerClues(raw: any, viewerId: string, user1Id: string, user2Id: st
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  const requestId = getRequestId(req);
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed', requestId });
 
   const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'Missing authorization' });
+  if (!authHeader) return res.status(401).json({ error: 'Missing authorization', requestId });
   const token = authHeader.split(' ')[1];
   const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
   const user = authData.user;
-  if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
+  if (authError || !user) {
+    logApiWarn(req, requestId, 'Invalid token in matches index API', { authError: authError?.message });
+    return res.status(401).json({ error: 'Invalid token', requestId });
+  }
 
   try {
     const lang = req.query.lang === 'en' ? 'en' : 'zh';
@@ -198,6 +203,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       matches,
     });
   } catch (err: any) {
-    return res.status(500).json({ error: err.message || 'Load matches failed' });
+    logApiError(req, requestId, err, { userId: user.id });
+    return res.status(500).json({ error: err.message || 'Load matches failed', requestId });
   }
 }

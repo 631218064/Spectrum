@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { emptyRegistrationFormData, normalizeRegistrationData, type RegistrationFormData, validateRegistrationForm } from '@/lib/registration';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getRequestId, logApiError, logApiWarn } from '@/lib/apiLogger';
 
 export const config = {
   api: {
@@ -27,22 +28,29 @@ function asArray(value: any): string[] {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST' && req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  const requestId = getRequestId(req);
+  if (req.method !== 'POST' && req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed', requestId });
 
   const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'Missing authorization header' });
+  if (!authHeader) return res.status(401).json({ error: 'Missing authorization header', requestId });
   const token = authHeader.split(' ')[1];
 
   const {
     data: { user },
     error: authError,
   } = await supabaseAdmin.auth.getUser(token);
-  if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
+  if (authError || !user) {
+    logApiWarn(req, requestId, 'Invalid token in profile API', { authError: authError?.message });
+    return res.status(401).json({ error: 'Invalid token', requestId });
+  }
 
   if (req.method === 'GET') {
     const { data, error } = await supabaseAdmin.from('profiles').select('*').eq('id', user.id).maybeSingle();
-    if (error) return res.status(500).json({ error: error.message || 'Failed to load profile' });
-    if (!data) return res.status(404).json({ error: 'Profile not found' });
+    if (error) {
+      logApiError(req, requestId, error, { userId: user.id, phase: 'profile_get' });
+      return res.status(500).json({ error: error.message || 'Failed to load profile', requestId });
+    }
+    if (!data) return res.status(404).json({ error: 'Profile not found', requestId });
 
     const location = parseMaybeJson(data.location) || {};
     const photos = asArray(data.photos);
@@ -97,7 +105,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const normalized = normalizeRegistrationData(incoming);
     const validation = validateRegistrationForm(normalized);
     if (!validation.isValid) {
-      return res.status(400).json({ error: 'Validation failed', errors: validation.errors });
+      logApiWarn(req, requestId, 'Profile validation failed', { userId: user.id, errorKeys: Object.keys(validation.errors || {}) });
+      return res.status(400).json({ error: 'Validation failed', errors: validation.errors, requestId });
     }
 
     const location = normalized.location || { country: '' };
@@ -169,6 +178,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!data) throw new Error('Profile save failed due to schema mismatch');
     return res.status(200).json({ success: true, profile: data });
   } catch (err: any) {
-    return res.status(500).json({ error: err.message || 'Profile save failed' });
+    logApiError(req, requestId, err, { userId: user.id, phase: 'profile_post' });
+    return res.status(500).json({ error: err.message || 'Profile save failed', requestId });
   }
 }
