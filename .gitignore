@@ -69,6 +69,10 @@ $RECYCLE.BIN/
 Icon
 ._*
 
+# keep web icon assets tracked
+!public/icon/
+!public/icon/*.svg
+
 # Linux
 *~
 
