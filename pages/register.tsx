@@ -618,9 +618,6 @@ export default function RegistrationPage() {
       }
 
       let token = '';
-      const { data: sessionData } = await supabase.auth.getSession();
-      token = sessionData.session?.access_token || '';
-
       if (!isEditMode) {
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: authForm.email.trim(),
@@ -638,11 +635,21 @@ export default function RegistrationPage() {
           setSubmitState('error');
           return;
         }
-        token = signUpData.session?.access_token || token;
+        token = signUpData.session?.access_token || '';
         if (!token) {
-          const { data: refreshed } = await supabase.auth.getSession();
-          token = refreshed.session?.access_token || '';
+          // In production, signUp may not return a session (e.g. email confirmation enabled).
+          // Try sign-in to obtain a fresh token and avoid reusing any stale local session token.
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: authForm.email.trim(),
+            password: authForm.password,
+          });
+          if (!signInError) {
+            token = signInData.session?.access_token || '';
+          }
         }
+      } else {
+        const { data: sessionData } = await supabase.auth.getSession();
+        token = sessionData.session?.access_token || '';
       }
 
       if (!token) {

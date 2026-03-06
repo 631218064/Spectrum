@@ -22,7 +22,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: 'Missing authorization', requestId });
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  if (!token) return res.status(401).json({ error: 'Invalid authorization header', requestId });
 
   const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
   if (authError || !user) {
