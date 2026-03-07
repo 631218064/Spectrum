@@ -1,19 +1,19 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { isInTrialPeriod, refundQuotaUsage } from '@/lib/matchRuntime';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { getRequestId, logApiError, logApiWarn } from '@/lib/apiLogger';
+import { getRequestId, logApiError } from '@/lib/apiLogger';
+import { getAuthorizedUser, getProfileStatus, isEmailVerified } from '@/lib/authGate';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const requestId = getRequestId(req);
   if (req.method !== 'DELETE') return res.status(405).json({ error: 'Method not allowed', requestId });
 
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'Missing authorization', requestId });
-  const token = authHeader.split(' ')[1];
-  const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
-  const user = authData.user;
-  if (authError || !user) {
-    logApiWarn(req, requestId, 'Invalid token in terminate API', { authError: authError?.message });
+  const auth = await getAuthorizedUser(req, requestId);
+  if (auth.error === 'Invalid authorization header') {
+    return res.status(401).json({ error: auth.error, requestId });
+  }
+  const user = auth.user;
+  if (auth.error || !user) {
     return res.status(401).json({ error: 'Invalid token', requestId });
   }
 
@@ -21,6 +21,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!matchId || typeof matchId !== 'string') return res.status(400).json({ error: 'Missing match id', requestId });
 
   try {
+    if (!isEmailVerified(user)) {
+      return res.status(403).json({ error: 'Email not verified', requestId });
+    }
+    const status = await getProfileStatus(user.id);
+    if (!status.profileCompleted) {
+      return res.status(403).json({ error: 'Profile not completed', requestId });
+    }
+
     const { data: match, error: matchError } = await supabaseAdmin
       .from('matches')
       .select('*')

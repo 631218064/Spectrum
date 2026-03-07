@@ -44,15 +44,37 @@ export default function Home({ session: initialSession }: any) {
     }
 
     const checkProfile = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', session.user.id)
-        .maybeSingle();
+      const confirmed = Boolean((session.user as any)?.email_confirmed_at || (session.user as any)?.confirmed_at);
+      if (!confirmed) {
+        router.replace(`/auth/verify-pending?email=${encodeURIComponent(session.user.email || '')}`);
+        return;
+      }
 
-      // 资料不存在时，直接进入新注册页。
-      if (error || !data) {
-        router.replace('/register');
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        setView('landing');
+        setLoading(false);
+        return;
+      }
+
+      await fetch('/api/profile/bootstrap', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const profileResp = await fetch('/api/profile', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!profileResp.ok) {
+        router.replace('/register?resume=1&step=1');
+        return;
+      }
+
+      const profileBody = (await profileResp.json()) as { profileCompleted?: boolean };
+      if (!profileBody.profileCompleted) {
+        router.replace('/register?resume=1&step=1');
         return;
       }
 

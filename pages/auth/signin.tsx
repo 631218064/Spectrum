@@ -1,10 +1,29 @@
-﻿import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { Globe, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { loginTranslations } from '@/lib/translations';
 import { useGlobalLanguage } from '@/hooks/useGlobalLanguage';
+
+async function resolvePostLoginRoute() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session?.access_token;
+  if (!token) return '/auth/signin';
+
+  await fetch('/api/profile/bootstrap', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const profileResp = await fetch('/api/profile', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!profileResp.ok) return '/register?resume=1&step=1';
+  const profileBody = (await profileResp.json()) as { profileCompleted?: boolean };
+  return profileBody.profileCompleted ? '/' : '/register?resume=1&step=1';
+}
 
 export default function SignIn() {
   const router = useRouter();
@@ -17,18 +36,32 @@ export default function SignIn() {
 
   const login = loginTranslations[lang];
 
+  useEffect(() => {
+    if (!router.isReady) return;
+    const queryEmail = typeof router.query.email === 'string' ? router.query.email : '';
+    const verified = router.query.verified === '1';
+    if (queryEmail) setEmail(queryEmail);
+    if (verified) setError(login.verifiedSignInHint);
+  }, [login.verifiedSignInHint, router.isReady, router.query.email, router.query.verified]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
-      router.push('/');
+      const confirmed = Boolean((data.user as any)?.email_confirmed_at || (data.user as any)?.confirmed_at);
+      if (!confirmed) {
+        router.push(`/auth/verify-pending?email=${encodeURIComponent(email)}`);
+        return;
+      }
+      const next = await resolvePostLoginRoute();
+      router.push(next);
     } catch (err: any) {
       setError(err?.message || login.genericError);
     } finally {
@@ -71,11 +104,11 @@ export default function SignIn() {
             </Link>
           </div>
 
-          {error && (
+          {error ? (
             <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-500">
               {error}
             </div>
-          )}
+          ) : null}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">

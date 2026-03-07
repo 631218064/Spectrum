@@ -220,6 +220,8 @@ export default function RegistrationPage() {
 
   const t = registrationTranslations[lang];
   const isEditMode = router.query.mode === 'edit';
+  const isResumeMode = router.query.resume === '1';
+  const requiresAccountStep = !isEditMode && !isResumeMode;
   const stepItems = useMemo(
     () =>
       t.sections.map((section, index) => {
@@ -268,11 +270,12 @@ export default function RegistrationPage() {
       }),
     [lang, step, submitState, t.sections]
   );
-  const handleLogoClick = () => {
+  const handleLogoClick = async () => {
     if (isEditMode) {
       router.push('/');
       return;
     }
+    await supabase.auth.signOut();
     router.push('/');
   };
 
@@ -306,6 +309,38 @@ export default function RegistrationPage() {
   }, [form.location.city, form.location.country, form.location.province]);
 
   useEffect(() => {
+    if (!router.isReady) return;
+    const requestedStep = Number(router.query.step || 0);
+    const clampedStep = Number.isFinite(requestedStep) ? Math.min(4, Math.max(0, requestedStep)) : 0;
+    if (isResumeMode && !isEditMode) {
+      setStep(Math.max(1, clampedStep));
+      setTip(lang === 'zh' ? '邮箱已验证，继续完善资料即可开启匹配之旅。' : 'Email verified. Continue your profile to start matching.');
+      return;
+    }
+    setStep(clampedStep);
+  }, [isEditMode, isResumeMode, lang, router.isReady, router.query.step]);
+
+  useEffect(() => {
+    if (!router.isReady || isEditMode) return;
+
+    const guardEntry = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData.user;
+      if (!user) return;
+      const confirmed = Boolean((user as any)?.email_confirmed_at || (user as any)?.confirmed_at);
+      if (!confirmed) {
+        router.replace(`/auth/verify-pending?email=${encodeURIComponent(user.email || '')}`);
+        return;
+      }
+      if (!isResumeMode) {
+        router.replace('/register?resume=1&step=1');
+      }
+    };
+
+    void guardEntry();
+  }, [isEditMode, isResumeMode, router, router.isReady]);
+
+  useEffect(() => {
     fetch('/cities.json')
       .then((resp) => resp.json())
       .then((data: CitiesData) => setCitiesData(data))
@@ -313,7 +348,7 @@ export default function RegistrationPage() {
   }, []);
 
   useEffect(() => {
-    if (isEditMode) return;
+    if (isEditMode || isResumeMode) return;
     const raw = window.localStorage.getItem(DRAFT_KEY);
     if (!raw) return;
     try {
@@ -325,12 +360,12 @@ export default function RegistrationPage() {
       window.localStorage.removeItem(DRAFT_KEY);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditMode]);
+  }, [isEditMode, isResumeMode]);
 
   useEffect(() => {
-    if (!router.isReady || !isEditMode) return;
+    if (!router.isReady || (!isEditMode && !isResumeMode)) return;
 
-    const loadProfileForEdit = async () => {
+    const loadProfileForForm = async () => {
       try {
         const { data: userData } = await supabase.auth.getUser();
         setReadonlyEmail(userData.user?.email || '');
@@ -346,21 +381,30 @@ export default function RegistrationPage() {
         const body = (await resp.json()) as { form?: RegistrationFormData };
         if (!body.form) return;
         setForm(body.form);
-        setTip(lang === 'zh' ? '已加载当前资料，可编辑后提交更新' : 'Current profile loaded. Submit to save changes.');
+        setTip(
+          isEditMode
+            ? lang === 'zh'
+              ? '已加载当前资料，可编辑后提交更新'
+              : 'Current profile loaded. Submit to save changes.'
+            : lang === 'zh'
+            ? '邮箱已验证，继续完善资料即可开启匹配之旅。'
+            : 'Email verified. Continue your profile to start matching.'
+        );
       } catch {
         // ignore
       }
     };
 
-    loadProfileForEdit();
-  }, [isEditMode, router.isReady]);
+    loadProfileForForm();
+  }, [isEditMode, isResumeMode, lang, router.isReady]);
 
   useEffect(() => {
+    if (isEditMode) return;
     window.localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
     setTip(t.savedDraft);
     const timer = setTimeout(() => setTip(''), 1200);
     return () => clearTimeout(timer);
-  }, [form, t.savedDraft]);
+  }, [form, isEditMode, t.savedDraft]);
 
   useEffect(() => {
     // 鑽夌鎭㈠鏃讹紝灏嗗凡淇濆瓨鐨?URL 鏄犲皠涓?Upload 鐨?fileList銆?
@@ -540,7 +584,7 @@ export default function RegistrationPage() {
 
   const getStepKeys = (currentStep: number, currentForm: RegistrationFormData): string[] => {
     if (currentStep === 0) {
-      return isEditMode ? [] : ['email', 'password', 'confirm_password'];
+      return requiresAccountStep ? ['email', 'password', 'confirm_password'] : [];
     }
     if (currentStep === 1) {
       return [
@@ -602,7 +646,7 @@ export default function RegistrationPage() {
       });
 
       const result = validateRegistrationForm(preliminaryPayload);
-      const authErrors = !isEditMode ? validateAuthFields(authForm) : {};
+      const authErrors = requiresAccountStep ? validateAuthFields(authForm) : {};
       const mergedErrors = { ...result.errors, ...authErrors };
 
       if (Object.keys(mergedErrors).length > 0) {
@@ -617,40 +661,8 @@ export default function RegistrationPage() {
         return;
       }
 
-      let token = '';
-      if (!isEditMode) {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: authForm.email.trim(),
-          password: authForm.password,
-        });
-        if (signUpError) {
-          const msg = String(signUpError.message || '').toLowerCase();
-          if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
-            setErrors((prev) => ({ ...prev, email: 'email_registered' }));
-            setStep(0);
-            setTimeout(() => scrollToField('email'), 0);
-          } else {
-            setTip(signUpError.message || t.submitFailed);
-          }
-          setSubmitState('error');
-          return;
-        }
-        token = signUpData.session?.access_token || '';
-        if (!token) {
-          // In production, signUp may not return a session (e.g. email confirmation enabled).
-          // Try sign-in to obtain a fresh token and avoid reusing any stale local session token.
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: authForm.email.trim(),
-            password: authForm.password,
-          });
-          if (!signInError) {
-            token = signInData.session?.access_token || '';
-          }
-        }
-      } else {
-        const { data: sessionData } = await supabase.auth.getSession();
-        token = sessionData.session?.access_token || '';
-      }
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || '';
 
       if (!token) {
         setTip(t.errors.auth_session_missing || t.submitFailed);
@@ -706,11 +718,55 @@ export default function RegistrationPage() {
     }
   };
 
+  const handleAccountStep = async () => {
+    const authErrors = validateAuthFields(authForm);
+    setErrors((prev) => ({ ...prev, ...authErrors }));
+    const firstStepErrorKey = ['email', 'password', 'confirm_password'].find((key) => Boolean(authErrors[key]));
+    if (firstStepErrorKey) {
+      scrollToField(firstStepErrorKey);
+      return;
+    }
+
+    setSubmitState('submitting');
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      const redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent('/register?resume=1&step=1')}`;
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: authForm.email.trim(),
+        password: authForm.password,
+        options: {
+          emailRedirectTo: redirectTo,
+        },
+      });
+      if (signUpError) {
+        const msg = String(signUpError.message || '').toLowerCase();
+        if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
+          setErrors((prev) => ({ ...prev, email: 'email_registered' }));
+          setTimeout(() => scrollToField('email'), 0);
+        } else {
+          setTip(signUpError.message || t.submitFailed);
+        }
+        setSubmitState('error');
+        return;
+      }
+
+      router.push(`/auth/verify-pending?email=${encodeURIComponent(authForm.email.trim())}`);
+    } catch {
+      setSubmitState('error');
+    } finally {
+      setSubmitState('idle');
+    }
+  };
+
   const validateAndNext = () => {
+    if (step === 0 && requiresAccountStep) {
+      void handleAccountStep();
+      return;
+    }
     const payload = sanitizePayload(form);
     const result = validateRegistrationForm(payload);
     const stepKeys = getStepKeys(step, payload);
-    const authErrors = step === 0 && !isEditMode ? validateAuthFields(authForm) : {};
+    const authErrors = step === 0 && requiresAccountStep ? validateAuthFields(authForm) : {};
     const nextErrors: Record<string, string> = {};
     for (const key of stepKeys) {
       if (authErrors[key]) nextErrors[key] = authErrors[key];
@@ -779,11 +835,17 @@ export default function RegistrationPage() {
 
           {step === 0 ? (
             <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
-              <Field fieldKey="email" label={t.labels.email} required={!isEditMode} error={errors.email ? t.errors[errors.email] || errors.email : ''}>
-                {isEditMode ? (
+              <Field fieldKey="email" label={t.labels.email} required={!isEditMode && !isResumeMode} error={errors.email ? t.errors[errors.email] || errors.email : ''}>
+                {isEditMode || isResumeMode ? (
                   <div className="space-y-1.5">
                     <Input value={readonlyEmail} disabled className="form-input-ant w-full" />
-                    <p className="text-xs text-[#7E8C9D]">{t.placeholders.email_readonly_hint}</p>
+                    <p className="text-xs text-[#7E8C9D]">
+                      {isResumeMode
+                        ? lang === 'zh'
+                          ? '邮箱已验证，账号信息无需再次填写'
+                          : 'Email verified. Account details do not need to be entered again.'
+                        : t.placeholders.email_readonly_hint}
+                    </p>
                   </div>
                 ) : (
                   <Input
@@ -798,7 +860,7 @@ export default function RegistrationPage() {
                   />
                 )}
               </Field>
-              {!isEditMode ? (
+              {!isEditMode && !isResumeMode ? (
                 <>
                   <Field fieldKey="password" label={t.labels.password} required error={errors.password ? t.errors[errors.password] || errors.password : ''}>
                     <Input.Password
